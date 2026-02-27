@@ -29,4 +29,6 @@ public interface ProductService {
 
     MenuItemsResponse patchProduct (UUID productId, UpdateProductPatchRequest patch);
 
+    MenuItemsResponse updateProductImage (UUID productId, MultipartFile image);
+
 }

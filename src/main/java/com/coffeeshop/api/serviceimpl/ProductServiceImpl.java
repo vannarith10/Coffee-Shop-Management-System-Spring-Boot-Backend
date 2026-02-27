@@ -328,6 +328,84 @@ public class ProductServiceImpl implements ProductService {
 
 
     // =======================
+    // Update Product Image
+    // =======================
+    @Override
+    @Transactional
+    public MenuItemsResponse updateProductImage(UUID productId, MultipartFile image) {
+        // Check image
+        if(image == null || image.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image is required.");
+        }
+
+        // Get user
+        User user = userRepository.findById(userService.getCurrentUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+        // Validate Role
+        if(user.getRole() != Role.ADMIN){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN role can update product details.");
+        }
+
+        // Get product
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found."));
+
+        // Ensure Bucket exists
+        imageStorageService.ensureBucketExists();
+
+        // Get Category Name
+        Category category = product.getCategory();
+        String categoryName = (category != null && category.getName() != null)
+                        ? category.getName().trim()
+                        : "uncategorized";
+
+
+        // Upload image
+        String folder = buildFolder(categoryName);
+        String imageKey = null;
+
+        try{
+            imageKey = imageStorageService.upload(image, folder);
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload image to MinIO.");
+        }
+
+        String presignUrl = imageStorageService.getPresignedGetUrl(imageKey).toString();
+
+        // Update product
+        product.setImageKey(imageKey);
+        product.setUpdatedAt(Instant.now());
+
+        Product saved = productRepository.save(product);
+
+        // Send to POS real-time
+        productEventPublisher.publish(new ProductEvent(
+                "product.image.updated",
+                saved.getId(),
+                Map.of(
+                        "changed", Map.of("image_url", presignUrl),
+                        "updated_at", saved.getUpdatedAt().toString()
+                )
+        ));
+
+        return MenuItemsResponse.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .price(saved.getPrice())
+                .imageUrl(presignUrl)
+                .description(saved.getDescription())
+                .categoryType(saved.getCategory().getType())
+                .categoryName(saved.getCategory().getName())
+                .inStock(saved.isAvailable())
+                .build();
+    }//==================================================================================
+
+
+
+
+
+    // =======================
     // Update Stock Status
     // =======================
     // TODO

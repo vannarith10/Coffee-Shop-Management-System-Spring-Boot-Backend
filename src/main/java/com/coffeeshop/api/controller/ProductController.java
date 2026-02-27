@@ -59,6 +59,14 @@ public class ProductController {
     }
 
 
+    @PutMapping("/{productId}/image")
+    public ResponseEntity<MenuItemsResponse> updateImage (@PathVariable UUID productId,
+                                                          @RequestParam("image") MultipartFile image) {
+
+        return ResponseEntity.ok(productService.updateProductImage(productId, image));
+    }
+
+
     //============================================================
     // Update product status
     //============================================================
