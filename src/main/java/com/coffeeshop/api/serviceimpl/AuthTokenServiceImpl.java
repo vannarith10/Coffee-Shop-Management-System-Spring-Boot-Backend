@@ -54,23 +54,17 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                     "Account disabled");
         }
 
-//        refreshTokenRepository.deleteByUser_Id(user.getId());
-//        refreshTokenRepository.flush();
-
-        refreshTokenRepository.delete(rfToken);  // Delete only this specific token
 
         // Generate new access token
         String newAccessToken = jwtService.generateAccessToken(user);
         String newRefreshToken = jwtService.generateRefreshToken(user);
 
+        rfToken.setToken(newRefreshToken);
+        rfToken.setExpiresAt(jwtService.getRefreshExpiryInstant());
+        rfToken.setRevoked(false);
 
-        RefreshToken newRf = RefreshToken.builder()
-                .token(newRefreshToken)
-                .user(user)
-                .expiresAt(jwtService.getRefreshExpiryInstant())
-                .revoked(false)
-                .build();
-        refreshTokenRepository.save(newRf);
+        refreshTokenRepository.saveAndFlush(rfToken);
+
 
         log.debug("Rotated refresh token for userId={}", user.getId());
 
@@ -81,7 +75,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                 jwtService.getExpiresInSeconds(),
                 new AccessTokenResponse.Refresh(
                         newRefreshToken,
-                        newRf.getExpiresAt()
+                        rfToken.getExpiresAt()
                 )
         );
     }

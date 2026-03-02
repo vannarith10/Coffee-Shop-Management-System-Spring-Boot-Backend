@@ -16,7 +16,7 @@ public class TokenController {
     private final AuthTokenService authTokenService;
 
 
-    @PostMapping("/get-acceess-token")
+    @PostMapping("/get-access-token")
     public ResponseEntity<AccessTokenResponse> getAccessToken(@RequestBody @Validated RefreshToken refreshToken){
 
         System.out.println("########## Received refresh request: " + refreshToken);

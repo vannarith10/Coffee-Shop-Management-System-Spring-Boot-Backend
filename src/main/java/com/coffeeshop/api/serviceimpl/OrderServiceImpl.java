@@ -116,6 +116,7 @@ public class OrderServiceImpl implements OrderService {
             // Total price for this item
             BigDecimal lineTotal;
 
+            // DISCOUNT
             // Item price x quantity x discount (total amount)
             if(product.isDiscount() && product.getDiscountRate() != null){
                 // UnitPrice = price * (1 - rate)
@@ -133,6 +134,7 @@ public class OrderServiceImpl implements OrderService {
                 discountAmount = discountAmount.add(lineDiscountAmount);
 
             }else{
+                // NO DISCOUNT
                 lineTotal = originalLineTotal.setScale(2, RoundingMode.HALF_UP);
                 unitPrice = product.getPrice().setScale(2, RoundingMode.HALF_UP);
             }
@@ -140,6 +142,11 @@ public class OrderServiceImpl implements OrderService {
             // Add to total
             totalAmount = totalAmount.add(lineTotal);
             subTotalAmount = subTotalAmount.add(originalLineTotal);
+
+
+            //TODO
+            // Need to apply WebSocket here to send to Barista in real-time
+
 
             // Build OrderItem
             OrderItem item = new OrderItem();
@@ -154,8 +161,8 @@ public class OrderServiceImpl implements OrderService {
         }
 
 
-        // Apply tax (example: 5%)
-        BigDecimal taxRate = new BigDecimal("0.05");
+        // Apply tax (example: 0%)
+        BigDecimal taxRate = new BigDecimal("0.00");
         taxAmount = totalAmount.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
         totalAmount = totalAmount.add(taxAmount);
 

@@ -97,7 +97,7 @@ public class SecurityConfig {
                         // ====================
                         // TOKEN
                         // ====================
-                        .requestMatchers(HttpMethod.POST, "/api/v1/token/get-acceess-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/token/get-access-token").permitAll()
 
 
                         // ====================
@@ -115,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/product/update-price").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/product/*").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.PUT, "/api/v1/product/*/image").hasRole(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/summary").hasRole(Role.ADMIN.toString())
 
 
                         // ====================

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +25,36 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findTop50ByStatusInOrderByCreatedAtAsc(Collection<OrderStatus> statuses);
 
     List<Order> findByStatusInOrderByCreatedAtAsc(Collection<OrderStatus> statuses, Pageable pageable);
+
+
+    @Query("""
+        SELECT COALESCE(SUM(o.totalAmount), 0)
+        FROM Order o
+        WHERE o.createdAt >= :start AND o.createdAt < :end
+          AND o.status = :doneStatus
+          AND o.cancelledAt IS NULL
+    """)
+    BigDecimal sumRevenueBetween(
+            @Param("start") Instant start,
+            @Param("end") Instant end,
+            @Param("doneStatus") OrderStatus doneStatus
+    );
+
+
+    @Query("""
+        SELECT COUNT(o)
+        FROM Order o
+        WHERE o.createdAt >= :start AND o.createdAt < :end
+          AND o.status = :doneStatus
+          AND o.cancelledAt IS NULL
+    """)
+    long countOrdersBetween(
+            @Param("start") Instant start,
+            @Param("end") Instant end,
+            @Param("doneStatus") OrderStatus doneStatus
+    );
+
+
 
 
 }
