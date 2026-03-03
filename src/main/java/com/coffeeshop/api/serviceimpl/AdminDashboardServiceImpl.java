@@ -33,17 +33,17 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final OrderRepository orderRepository;
 
 
+
+    // ====================================
+    // Business Analytics Summary
+    // ====================================
     @Override
     public BusinessAnalyticsSummaryResponse businessAnalyticsSummary() {
-        // Get user
-        User user = userRepository.findById(userService.getCurrentUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
 
-        // Validate role
-        if(user.getRole() != Role.ADMIN){
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN role can get this resource.");
-        }
-
+        // The first time of creating this method is for only ADMIN role, but now
+        // I moved validate user role to the Controller place because this function call be called to use at Barista Update Status that has BARISTA role
+        // Because Update Order Status handles real-time sending new Business Analytics Summary values
+        // that it needs this function to calculate the values and unchanged return type
 
         ZonedDateTime nowBiz = ZonedDateTime.now(BUSINESS_TZ);
         var today = DateWindows.today(nowBiz);
@@ -78,7 +78,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         );
 
         return new BusinessAnalyticsSummaryResponse(summary);
-
     }
 
 

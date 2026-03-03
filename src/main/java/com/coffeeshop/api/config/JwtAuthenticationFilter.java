@@ -49,6 +49,7 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+
         // 2) Skip public endpoints
         final String path = request.getRequestURI();
         if (isPublic(path)) {
@@ -56,12 +57,14 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+
         // 3) Avoid overriding an existing authenticated context
         Authentication existing = SecurityContextHolder.getContext().getAuthentication();
         if (existing != null && existing.isAuthenticated()) {
             filterChain.doFilter(request, response);
             return;
         }
+
 
         // 4) Extract Bearer token
         String header = request.getHeader("Authorization");
@@ -75,6 +78,7 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+
         try {
             // 5) Parse username from token
             String username = jwtService.extractUsername(token);
@@ -82,6 +86,7 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+
 
             // 6) Load user details
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -91,12 +96,14 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+
             // 7) Validate token against user (if your JwtService supports it)
             if (!isTokenValidAgainstUser(token, userDetails)) {
                 SecurityContextHolder.clearContext();
                 filterChain.doFilter(request, response);
                 return;
             }
+
 
             // 8) Create Authentication and set context
             UsernamePasswordAuthenticationToken auth =
@@ -114,6 +121,7 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Optional logging:
             // log.warn("JWT authentication error", e);
         }
+
 
         // 9) Continue chain
         filterChain.doFilter(request, response);

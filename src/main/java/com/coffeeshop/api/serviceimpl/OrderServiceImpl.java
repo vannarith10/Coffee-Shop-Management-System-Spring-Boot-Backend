@@ -8,21 +8,25 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.PaymentMethod;
 import com.coffeeshop.api.domain.enums.Role;
-import com.coffeeshop.api.dto.order.CashOrderResponse;
-import com.coffeeshop.api.dto.order.CreateOrderRequest;
-import com.coffeeshop.api.dto.order.OrderMessage;
+import com.coffeeshop.api.dto.adminDashboard.BusinessAnalyticsSummaryResponse;
+import com.coffeeshop.api.dto.order.*;
 import com.coffeeshop.api.mapper.OrderMapper;
 import com.coffeeshop.api.repository.OrderRepository;
 import com.coffeeshop.api.repository.ProductRepository;
 import com.coffeeshop.api.repository.UserRepository;
+import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.OrderService;
 import com.coffeeshop.api.service.UserService;
 import com.coffeeshop.api.websocket.OrderEventPublisher;
 import com.coffeeshop.api.util.OrderNumberGenerator;
+import com.coffeeshop.api.websocket.WebSocketEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -30,6 +34,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -43,8 +48,14 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final WebSocketEventPublisher webSocketEventPublisher;
+    private final AdminDashboardService adminDashboardService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
 
+    // =============================
+    // Create Order
+    // =============================
     @Override
     @Transactional
     public CashOrderResponse createOrder(CreateOrderRequest request) {
@@ -144,9 +155,6 @@ public class OrderServiceImpl implements OrderService {
             subTotalAmount = subTotalAmount.add(originalLineTotal);
 
 
-            //TODO
-            // Need to apply WebSocket here to send to Barista in real-time
-
 
             // Build OrderItem
             OrderItem item = new OrderItem();
@@ -196,7 +204,9 @@ public class OrderServiceImpl implements OrderService {
 
 
 
-    // Send Order To BARISTA
+    // ==================================
+    // Confirm Order and send To BARISTA
+    // ==================================
     @Override
     public Order confirmAndSendToBarista(UUID orderId) {
 
@@ -222,7 +232,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Validate Order status (It's must be CREATED)
-        if(order.getStatus() !=OrderStatus.CREATED){
+        if(order.getStatus() != OrderStatus.CREATED){
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Order must be in CREATED state.");
         }
 
@@ -231,10 +241,168 @@ public class OrderServiceImpl implements OrderService {
         order.setConfirmedAt(Instant.now());
         Order saved = orderRepository.save(order);
 
+
+        // Send to Barista
         OrderMessage message = OrderMapper.toOrderMessage(saved);
         orderEventPublisher.sendToAllBaristas(message);
 
         return saved;
     }
+
+
+
+    // ======================================
+    // Update Order Status (BARISTA)
+    // ======================================
+    @Transactional
+    @Override
+    public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, String status) {
+        // Order Status road: CREATED -> QUEUE -> PREPARING -> DONE
+        // BARISTA can turn to only PREPARING or DONE at a time
+
+        // Validate Inputs
+        if (orderId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order ID is required.");
+        }
+        if (status == null || status.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required.");
+        }
+
+        // Get user
+        User user = userRepository.findById(userService.getCurrentUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+        // Validate role
+        if (user.getRole() != Role.BARISTA) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only BARISTA can update order status.");
+        }
+
+        // Get order
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found."));
+
+        OrderStatus oldStatus = order.getStatus();
+
+
+        // Parse requested
+        final OrderStatus requested;
+        try {
+            requested = OrderStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status: " + status);
+        }
+
+
+        // Check Order Status (Must be in QUEUED state)
+        if (order.getStatus() != OrderStatus.QUEUED && order.getStatus() != OrderStatus.PREPARING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Order status must in QUEUE or PREPARING state. (Current status: " + oldStatus + ").");
+        }
+
+
+        // Idempotent: if already the requested status, return OK
+        if (oldStatus == requested) {
+            return UpdateOrderStatusResponse.builder()
+                    .orderId(order.getId())
+                    .oldStatus(oldStatus)
+                    .newStatus(order.getStatus())
+                    .build();
+        }
+
+        Instant now = Instant.now();
+        switch (requested) {
+            case PREPARING -> {
+                if (oldStatus != OrderStatus.QUEUED) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Can move to PREPARING only from QUEUED (current: " + oldStatus + ").");
+                }
+                order.setStatus(OrderStatus.PREPARING);
+                if (order.getPreparationStartedAt() == null) order.setPreparationStartedAt(now);
+                order.setProcessedBy(user);
+            }
+            case DONE -> {
+                if (oldStatus != OrderStatus.PREPARING) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Can move to DONE only from PREPARING (current: " + oldStatus + ").");
+                }
+                order.setStatus(OrderStatus.DONE);
+                order.setDoneAt(now);
+                order.setProcessedBy(user);
+            }
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "BARISTA can only set status to PREPARING or DONE.");
+        }
+
+
+
+        // Update Order fields
+        order.setUpdatedAt(now);
+        Order saved = orderRepository.save(order);
+
+        // WebSocket: Send to subscriber (Admin Dashboard Summary)
+        OrderEvent event = new OrderEvent(
+                "order.update.status",
+                saved.getId(),
+                Map.of(
+                        "old_status", oldStatus.toString(),
+                        "new_status", saved.getStatus().toString()
+                )
+        );
+
+        // Send to Barista himself to update UI
+        // Publish AFTER COMMIT to avoid ghost updates
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                webSocketEventPublisher.publishToBarista(event);
+            }
+        });
+
+
+        // Admin Summary Analytics real-time update
+        if (saved.getStatus() == OrderStatus.DONE) {
+            // Publish AFTER COMMIT to avoid ghost updates
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    BusinessAnalyticsSummaryResponse summary = adminDashboardService.businessAnalyticsSummary();
+                    simpMessagingTemplate.convertAndSend("/topic/admin-dashboard/summary", summary);
+                }
+            });
+        }
+
+        return UpdateOrderStatusResponse.builder()
+                .orderId(saved.getId())
+                .oldStatus(oldStatus)
+                .newStatus(saved.getStatus())
+                .build();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
