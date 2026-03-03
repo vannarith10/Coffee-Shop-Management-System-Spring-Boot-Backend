@@ -17,9 +17,6 @@ import java.net.URI;
 @Configuration
 public class S3Config {
 
-    @Value("${minio.endpoint}")
-    private String endpoint;
-
     @Value("${minio.access-key}")
     private String accessKey;
 
@@ -29,23 +26,32 @@ public class S3Config {
     @Value("${minio.region}")
     private String region;
 
+    @Value("${minio.internal-endpoint}")
+    private String internalEndpoint;
+
+    @Value("${minio.public-endpoint}")
+    private String publicEndpoint;
+
 
     private StaticCredentialsProvider credentialsProvider () {
         return StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey));
     }
 
 
+    private S3Configuration s3PathStyle () {
+        return S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .build();
+    }
+
+
     @Bean
     public S3Client s3Client () {
         return S3Client.builder()
-                .endpointOverride(URI.create(endpoint))
+                .endpointOverride(URI.create(internalEndpoint))
                 .region(Region.of(region))
                 .credentialsProvider(credentialsProvider())
-                .serviceConfiguration(
-                        S3Configuration.builder()
-                                .pathStyleAccessEnabled(true)
-                                .build()
-                )
+                .serviceConfiguration(s3PathStyle())
                 .build();
     }
 
@@ -53,14 +59,10 @@ public class S3Config {
     @Bean
     public S3Presigner s3Presigner () {
         return S3Presigner.builder()
-                .endpointOverride(URI.create(endpoint))
+                .endpointOverride(URI.create(publicEndpoint))
                 .region(Region.of(region))
                 .credentialsProvider(credentialsProvider())
-                .serviceConfiguration(
-                        S3Configuration.builder()
-                                .pathStyleAccessEnabled(true)
-                                .build()
-                )
+                .serviceConfiguration(s3PathStyle())
                 .build();
     }
 

@@ -24,6 +24,8 @@ public class AdminDashboardController {
     private final UserRepository userRepository;
     private final UserService userService;
 
+
+
     @GetMapping("/summary")
     public ResponseEntity<BusinessAnalyticsSummaryResponse> businessAnalyticsSummary () {
         // Get user
@@ -36,5 +38,8 @@ public class AdminDashboardController {
         }
         return ResponseEntity.ok(adminDashboardService.businessAnalyticsSummary());
     }
+
+
+
 
 }
