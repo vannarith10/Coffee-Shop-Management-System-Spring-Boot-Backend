@@ -130,9 +130,7 @@ public class SecurityConfig {
                         // ====================
                         // BARISTA
                         // ====================
-                        .requestMatchers(HttpMethod.POST, "/v1/barista-order/orders/*/start").hasRole(Role.BARISTA.toString())
-                        .requestMatchers(HttpMethod.POST, "/api/v1/barista-order/orders/*/done").hasRole(Role.BARISTA.toString())
-                        .requestMatchers(HttpMethod.GET, "/api/v1/barista/orders").hasRole(Role.BARISTA.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/order/get-orders").hasRole(Role.BARISTA.toString())
                         .requestMatchers(HttpMethod.PUT,"/api/v1/order/*/update-status").hasRole(Role.BARISTA.toString())
 
 

@@ -1,10 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.domain.Order;
-import com.coffeeshop.api.dto.order.CreateOrderRequest;
-import com.coffeeshop.api.dto.order.CashOrderResponse;
-import com.coffeeshop.api.dto.order.UpdateOrderStatusRequest;
-import com.coffeeshop.api.dto.order.UpdateOrderStatusResponse;
+import com.coffeeshop.api.dto.order.*;
 import com.coffeeshop.api.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -34,6 +32,11 @@ public class OrderController {
     public ResponseEntity<UpdateOrderStatusResponse> updateOrderStatus (@PathVariable UUID orderId,
                                                                         @RequestBody UpdateOrderStatusRequest request) {
         return ResponseEntity.ok(orderService.updateOrderStatus(orderId, request.status()));
+    }
+
+    @GetMapping("/get-orders")
+    public List<OrderMessageToBarista> list () {
+        return orderService.findRecentVisibleOrders();
     }
 
 }

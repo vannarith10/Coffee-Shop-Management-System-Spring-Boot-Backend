@@ -2,7 +2,7 @@ package com.coffeeshop.api.websocket;
 
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
-import com.coffeeshop.api.dto.order.OrderMessage;
+import com.coffeeshop.api.dto.order.OrderMessageToBarista;
 import com.coffeeshop.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -19,7 +19,7 @@ public class OrderEventPublisher {
 
 
     // Send new order to all Baristas
-    public void sendToAllBaristas (OrderMessage message) {
+    public void sendToAllBaristas (OrderMessageToBarista message) {
         // Fetch all baristas
         List<User> baristas = userRepository.findByRole(Role.BARISTA);
 
@@ -35,7 +35,7 @@ public class OrderEventPublisher {
 
 
 
-    public void publishStatusUpdate (OrderMessage message) {
+    public void publishStatusUpdate (OrderMessageToBarista message) {
         simpMessagingTemplate.convertAndSend("/topic/orders", message);
     }
 }

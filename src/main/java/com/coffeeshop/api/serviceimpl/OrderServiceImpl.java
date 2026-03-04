@@ -11,6 +11,7 @@ import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.BusinessAnalyticsSummaryResponse;
 import com.coffeeshop.api.dto.order.*;
 import com.coffeeshop.api.mapper.OrderMapper;
+import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.OrderRepository;
 import com.coffeeshop.api.repository.ProductRepository;
 import com.coffeeshop.api.repository.UserRepository;
@@ -32,10 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -51,6 +49,7 @@ public class OrderServiceImpl implements OrderService {
     private final WebSocketEventPublisher webSocketEventPublisher;
     private final AdminDashboardService adminDashboardService;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final ImageStorageService imageStorageService;
 
 
     // =============================
@@ -243,7 +242,7 @@ public class OrderServiceImpl implements OrderService {
 
 
         // Send to Barista
-        OrderMessage message = OrderMapper.toOrderMessage(saved);
+        OrderMessageToBarista message = OrderMapper.toOrderMessage(saved , imageStorageService);
         orderEventPublisher.sendToAllBaristas(message);
 
         return saved;
@@ -377,6 +376,25 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
+
+
+
+    // =============================
+    // Barista gets Orders
+    // =============================
+    @Override
+    public List<OrderMessageToBarista> findRecentVisibleOrders() {
+
+        EnumSet<OrderStatus> visible = EnumSet.of(
+                OrderStatus.QUEUED,
+                OrderStatus.PREPARING,
+                OrderStatus.DONE);
+        List<Order> orders = orderRepository.findTop50ByStatusInOrderByCreatedAtAsc(visible);
+
+        return orders.stream().map(order ->
+                        OrderMapper.toOrderMessage(order , imageStorageService))
+                .toList();
+    }
 
 
 
