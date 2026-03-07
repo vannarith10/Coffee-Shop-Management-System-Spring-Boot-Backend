@@ -305,6 +305,7 @@ public class ProductServiceImpl implements ProductService {
         String url = saved.getImageKey() != null ? imageStorageService.getPresignedGetUrl(saved.getImageKey()).toString() : null;
 
         // WebSocket: product.updated (only changed fields)
+        // Send to Cashier
         productEventPublisher.publish(new ProductEvent(
                 "product.updated",
                 saved.getId(),

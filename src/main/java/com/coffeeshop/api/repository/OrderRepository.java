@@ -56,5 +56,19 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
 
 
+    // Get all active orders + recent done orders
+    @Query("""
+    SELECT o FROM Order o 
+    WHERE o.status IN :activeStatuses 
+    OR (o.status = 'DONE' AND o.createdAt > :cutoffTime)
+    ORDER BY o.createdAt ASC
+    """)
+    List<Order> findVisibleOrders(
+            @Param("activeStatuses") Collection<OrderStatus> activeStatuses,
+            @Param("cutoffTime") Instant cutoffTime
+    );
+
+
+
 
 }

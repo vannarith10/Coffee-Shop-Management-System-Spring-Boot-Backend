@@ -18,7 +18,7 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
 
-        config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://*.ngrok-free.app"));
+        config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://*.ngrok-free.dev"));
 
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

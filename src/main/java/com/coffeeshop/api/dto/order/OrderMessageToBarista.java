@@ -17,12 +17,17 @@ public record OrderMessageToBarista(
 
         String status, // PENDING, PREPARING, DONE
 
+        String note,
+
         @JsonProperty("create_at")
         Instant createdAt,
 
         List<Item> items
 ) {
     public record Item(
+            @JsonProperty("item_id")
+            UUID itemId,
+
             String name,
 
             @JsonProperty("image_url")

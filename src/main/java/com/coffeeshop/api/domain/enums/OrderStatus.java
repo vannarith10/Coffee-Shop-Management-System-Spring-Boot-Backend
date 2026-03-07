@@ -10,6 +10,5 @@ public enum OrderStatus {
     CANCELLED
 
     // For now, we are using only CREATED, QUEUE, PREPARING, and DONE
-
 }
 

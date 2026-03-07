@@ -33,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 
@@ -241,9 +242,13 @@ public class OrderServiceImpl implements OrderService {
         Order saved = orderRepository.save(order);
 
 
-        // Send to Barista
+
+        // WebSocket: Publish new Order to Barista
         OrderMessageToBarista message = OrderMapper.toOrderMessage(saved , imageStorageService);
-        orderEventPublisher.sendToAllBaristas(message);
+        Object event = Map.of("event", "new.order",
+                "payload", message);
+        webSocketEventPublisher.publishToBarista(event);
+
 
         return saved;
     }
@@ -385,11 +390,28 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderMessageToBarista> findRecentVisibleOrders() {
 
-        EnumSet<OrderStatus> visible = EnumSet.of(
+        // This one has a bug, it returns only 50 oldest orders
+//        EnumSet<OrderStatus> visible = EnumSet.of(
+//                OrderStatus.QUEUED,
+//                OrderStatus.PREPARING,
+//                OrderStatus.DONE);
+//        List<Order> orders = orderRepository.findTop50ByStatusInOrderByCreatedAtAsc(visible);
+
+
+        // Calculate cutoff time (7 Days)
+        Instant cutoffTime = Instant.now().minus(7, ChronoUnit.DAYS);
+
+        // Get active statuses
+        EnumSet<OrderStatus> activeStatuses = EnumSet.of(
                 OrderStatus.QUEUED,
-                OrderStatus.PREPARING,
-                OrderStatus.DONE);
-        List<Order> orders = orderRepository.findTop50ByStatusInOrderByCreatedAtAsc(visible);
+                OrderStatus.PREPARING
+        );
+
+        // Fetch orders
+        List<Order> orders = orderRepository.findVisibleOrders(
+                activeStatuses,
+                cutoffTime
+        );
 
         return orders.stream().map(order ->
                         OrderMapper.toOrderMessage(order , imageStorageService))

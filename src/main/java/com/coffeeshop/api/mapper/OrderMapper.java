@@ -17,11 +17,13 @@ public class OrderMapper {
                 .orderId(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus().toString())
+                .note(order.getNote())
                 .createdAt(order.getCreatedAt())
                 .items(order.getItems().stream().map(
                         orderItem -> new OrderMessageToBarista.Item(
+                                orderItem.getId(),
                                 orderItem.getProduct().getName(),
-                                imageStorageService.getPresignedGetUrl(orderItem.getProduct().getImageKey()).toString(),
+                                orderItem.getProduct().getImageKey() == null ? null : imageStorageService.getPresignedGetUrl(orderItem.getProduct().getImageKey()).toString(),
                                 orderItem.getQuantity()
                         )
                 ).collect(Collectors.toList()))
