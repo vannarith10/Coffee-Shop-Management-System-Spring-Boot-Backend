@@ -97,6 +97,16 @@ public class ProductController {
     }
 
 
+
+    //==========================
+    // Top Selling Products
+    //==========================
+    @GetMapping("/top-selling-product")
+    public ResponseEntity<TopSellingProductsResponse> topSellingProducts () {
+        return  ResponseEntity.ok(productService.topSellingProducts());
+    }
+
+
 }
 
 

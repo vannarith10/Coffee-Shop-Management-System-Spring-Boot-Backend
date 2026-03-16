@@ -20,27 +20,6 @@ class DefaultUserInitializer implements ApplicationRunner {
     private final UserRepository userRepo;
     private final PasswordEncoder encoder;
 
-    // Function to create default User
-    private void createUserIfNotExists(String name,
-                                       String username,
-                                       String password,
-                                       Role role) {
-        if(userRepo.existsByUsername(username)) return;
-
-        User user = User.builder()
-                .name(name)
-                .username(username)
-                .password(encoder.encode(password))
-                .role(role)
-                .status(Status.ACTIVE)
-                .isActive(true)
-                .createdAt(Instant.now())
-                .build();
-
-        userRepo.save(user);
-    }
-
-
 
     // Creating users
     @Override
@@ -77,6 +56,26 @@ class DefaultUserInitializer implements ApplicationRunner {
                 "barista#1234",
                 Role.BARISTA
         );
+    }
+
+    // Function to create default User
+    private void createUserIfNotExists(String name,
+                                       String username,
+                                       String password,
+                                       Role role) {
+        if(userRepo.existsByUsername(username)) return;
+
+        User user = User.builder()
+                .name(name)
+                .username(username)
+                .password(encoder.encode(password))
+                .role(role)
+                .status(Status.ACTIVE)
+                .isActive(true)
+                .createdAt(Instant.now())
+                .build();
+
+        userRepo.save(user);
     }
 
 }

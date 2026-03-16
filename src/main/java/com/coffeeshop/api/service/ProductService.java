@@ -1,9 +1,6 @@
 package com.coffeeshop.api.service;
 
-import com.coffeeshop.api.dto.product.CreateProductResponse;
-import com.coffeeshop.api.dto.product.MenuItemsResponse;
-import com.coffeeshop.api.dto.product.UpdateProductPatchRequest;
-import com.coffeeshop.api.dto.product.UpdateProductPriceResponse;
+import com.coffeeshop.api.dto.product.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -30,5 +27,7 @@ public interface ProductService {
     MenuItemsResponse patchProduct (UUID productId, UpdateProductPatchRequest patch);
 
     MenuItemsResponse updateProductImage (UUID productId, MultipartFile image);
+
+    TopSellingProductsResponse topSellingProducts ();
 
 }

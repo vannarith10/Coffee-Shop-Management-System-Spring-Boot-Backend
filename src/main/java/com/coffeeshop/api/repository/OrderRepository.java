@@ -70,5 +70,16 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
 
 
+    // Barista Performance Metrics
+    @Query("""
+        select o from Order o
+            where o.status = com.coffeeshop.api.domain.enums.OrderStatus.DONE
+                and o.doneAt >= :from and o.doneAt < :to
+                    and o.preparationStartedAt is not null
+    """)
+    List<Order> findCompletedToday (Instant from, Instant to);
+
+
+
 
 }

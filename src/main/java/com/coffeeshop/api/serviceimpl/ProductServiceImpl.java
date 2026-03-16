@@ -2,15 +2,16 @@ package com.coffeeshop.api.serviceimpl;
 
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
+import com.coffeeshop.api.domain.ShopSetting;
 import com.coffeeshop.api.domain.User;
+import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.product.*;
 import com.coffeeshop.api.minio.ImageStorageService;
-import com.coffeeshop.api.repository.CategoryRepository;
-import com.coffeeshop.api.repository.ProductRepository;
-import com.coffeeshop.api.repository.UserRepository;
+import com.coffeeshop.api.repository.*;
 import com.coffeeshop.api.service.ProductService;
 import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.util.TimeRangeUtil;
 import com.coffeeshop.api.websocket.ProductEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -36,6 +37,8 @@ public class ProductServiceImpl implements ProductService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final ProductEventPublisher productEventPublisher;
+    private final ShopSettingRepository shopSettingRepository;
+    private final OrderItemRepository orderItemRepository;
 
 
     //====================
@@ -445,6 +448,11 @@ public class ProductServiceImpl implements ProductService {
 
     }//=======================================================================================
 
+
+
+
+
+
     // =================================
     // Update Product Price
     // =================================
@@ -489,6 +497,63 @@ public class ProductServiceImpl implements ProductService {
                 saved.getPrice()
         );
     }//=========================================================================================
+
+
+
+
+
+
+    // =============================
+    // Top Selling Products
+    // =============================
+    @Override
+    public TopSellingProductsResponse topSellingProducts() {
+        // Get User
+        User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Get Role
+        if (user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resource");
+        }
+
+        // Get Shop
+        ShopSetting shop = shopSettingRepository.findFirstByOrderByCreatedAtDesc().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop settings not initialized"));
+
+        // Get Target Product
+        Integer unitsTarget = shop.getUnitTarget();
+
+        // Get Time Range
+        var range = TimeRangeUtil.currentMonthRangePhnomPenh();
+
+        // Get List of Top selling product rows
+        List<TopSellingProductRow> rows =
+                orderItemRepository.findTopSellingProductsForMonth(
+                        OrderStatus.DONE,
+                        range.startInclusive,
+                        range.endExclusive
+                );
+
+        // Build each product
+        List<TopSellingProductsResponse.TopProducts> topProducts = rows.stream()
+                .map(row -> new TopSellingProductsResponse.TopProducts(
+                        row.productId(),
+                        row.productName(),
+                        row.imageKey() == null ? null : imageStorageService.getPresignedGetUrl(row.imageKey()).toString(),
+                        (int) row.unitsSold()
+                ))
+                .toList();
+
+
+        return TopSellingProductsResponse.builder()
+                .unitsTarget(unitsTarget)
+                .topProducts(topProducts)
+                .build();
+    }
+
+
+
+
+
 }
 
 

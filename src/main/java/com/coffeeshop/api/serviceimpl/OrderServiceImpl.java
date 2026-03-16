@@ -32,7 +32,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -323,6 +326,7 @@ public class OrderServiceImpl implements OrderService {
                 if (order.getPreparationStartedAt() == null) order.setPreparationStartedAt(now);
                 order.setProcessedBy(user);
             }
+
             case DONE -> {
                 if (oldStatus != OrderStatus.PREPARING) {
                     throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -330,8 +334,8 @@ public class OrderServiceImpl implements OrderService {
                 }
                 order.setStatus(OrderStatus.DONE);
                 order.setDoneAt(now);
-                order.setProcessedBy(user);
             }
+
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "BARISTA can only set status to PREPARING or DONE.");
         }
@@ -342,19 +346,23 @@ public class OrderServiceImpl implements OrderService {
         order.setUpdatedAt(now);
         Order saved = orderRepository.save(order);
 
-        // WebSocket: Send to subscriber (Admin Dashboard Summary)
-        OrderEvent event = new OrderEvent(
-                "order.update.status",
-                saved.getId(),
-                Map.of(
-                        "old_status", oldStatus.toString(),
-                        "new_status", saved.getStatus().toString()
-                )
-        );
 
+
+
+
+        // WebSocket - 1
         // Send to Barista himself to update UI
         // Publish AFTER COMMIT to avoid ghost updates
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            final OrderEvent event = new OrderEvent(
+                    "order.update.status",
+                    saved.getId(),
+                    Map.of(
+                            "old_status", oldStatus.toString(),
+                            "new_status", saved.getStatus().toString()
+                    )
+            );
+
             @Override
             public void afterCommit() {
                 webSocketEventPublisher.publishToBarista(event);
@@ -362,6 +370,28 @@ public class OrderServiceImpl implements OrderService {
         });
 
 
+
+        // WebSocket - 2
+        // Update Performance Metrics
+        if (saved.getStatus() == OrderStatus.DONE) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                final String path = "/topic/barista-dashboard/metrics";
+
+                @Override
+                public void afterCommit() {
+                    PerformanceMetricsResponse payload = performanceMetrics(Duration.parse("PT4M"));
+                    final Object body = Map.of(
+                            "event", "performance.metrics.updated",
+                            "payload", payload
+                    );
+                    simpMessagingTemplate.convertAndSend(path, body);
+                }
+            });
+        }
+
+
+
+        // WebSocket - 3
         // Admin Summary Analytics real-time update
         if (saved.getStatus() == OrderStatus.DONE) {
             // Publish AFTER COMMIT to avoid ghost updates
@@ -390,14 +420,6 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderMessageToBarista> findRecentVisibleOrders() {
 
-        // This one has a bug, it returns only 50 oldest orders
-//        EnumSet<OrderStatus> visible = EnumSet.of(
-//                OrderStatus.QUEUED,
-//                OrderStatus.PREPARING,
-//                OrderStatus.DONE);
-//        List<Order> orders = orderRepository.findTop50ByStatusInOrderByCreatedAtAsc(visible);
-
-
         // Calculate cutoff time (7 Days)
         Instant cutoffTime = Instant.now().minus(7, ChronoUnit.DAYS);
 
@@ -423,20 +445,76 @@ public class OrderServiceImpl implements OrderService {
 
 
 
+    // ===============================
+    // Barista Performance Metric
+    // ===============================
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
+    @Override
+    public PerformanceMetricsResponse performanceMetrics(Duration slaTarget) {
+
+        // Get start of the day
+        ZonedDateTime start = ZonedDateTime.now(BUSINESS_TZ).toLocalDate().atStartOfDay(BUSINESS_TZ);
+
+        Instant form = start.toInstant();
+        Instant to = start.plusDays(1).toInstant();
+
+        List<Order> completed = orderRepository.findCompletedToday(form, to);
+
+        // completed_today
+        int completedToday = completed.size();
+
+        // Compute duration per order
+        long totalSeconds = completed.stream()
+                .filter(o -> o.getPreparationStartedAt() != null && o.getDoneAt() != null)
+                .mapToLong(o -> Duration.between(o.getPreparationStartedAt(), o.getDoneAt()).getSeconds())
+                .filter(sec -> sec >= 0)
+                .sum();
+
+        // avg_prep_time
+        String avgPrepTimeStr;
+        if (completedToday > 0 && totalSeconds > 0) {
+            long avgSec = totalSeconds / completedToday;
+            avgPrepTimeStr = formatDurationCompact(Duration.ofSeconds(avgSec));
+        } else {
+            avgPrepTimeStr = "0s";
+        }
+
+
+        // efficiency
+        long slaMet = completed.stream()
+                .map(o -> Duration.between(o.getPreparationStartedAt(), o.getDoneAt()))
+                .filter(d -> !d.isNegative() && !d.isZero())
+                .filter(d -> d.compareTo(slaTarget) <= 0)
+                .count();
+        // Default value of slaTarget is 4 min (PT4M) - Period Time 4 Minutes
+
+        int efficiency = completedToday == 0 ? 0 : (int) Math.round((slaMet * 100.0) / completedToday);
+        // We calculate the Efficiency:
+        // Efficiency (%) = percentage of completed orders today that were prepare within the SLA time.
+        // Calculate as: (orders completed within SLA / total completed orders today) x 100
+
+        // SLA = Service Level Agreement
+
+
+        return PerformanceMetricsResponse.builder()
+                .avg_prep_time(avgPrepTimeStr)
+                .completed_today(completedToday)
+                .efficiency_percentage(efficiency)
+                .build();
+    }
 
 
 
+    private String formatDurationCompact(Duration d) {
+        long seconds = d.getSeconds();
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
 
-
-
-
-
-
-
-
-
-
-
+        if (hours > 0) return String.format("%dh %dm", hours, minutes);
+        if (minutes > 0) return String.format("%dm %ds", minutes, secs);
+        return String.format("%ds", secs);
+    }
 
 
 

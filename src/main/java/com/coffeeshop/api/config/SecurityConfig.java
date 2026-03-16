@@ -116,6 +116,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/product/*").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.PUT, "/api/v1/product/*/image").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/summary").hasRole(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/product/top-selling-product").hasRole(Role.ADMIN.toString())
 
 
                         // ====================
@@ -132,6 +133,7 @@ public class SecurityConfig {
                         // ====================
                         .requestMatchers(HttpMethod.GET, "/api/v1/order/get-orders").hasRole(Role.BARISTA.toString())
                         .requestMatchers(HttpMethod.PUT,"/api/v1/order/*/update-status").hasRole(Role.BARISTA.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/order/today").hasRole(Role.BARISTA.toString())
 
 
                         // ====================
