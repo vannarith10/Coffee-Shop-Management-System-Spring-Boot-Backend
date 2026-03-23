@@ -133,15 +133,15 @@
 
 
 		<!-- Flyway -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-flyway</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-			<!-- No version needed — Spring Boot 4.0.0 manages it to match flyway-core 11.14.1 -->
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.boot</groupId>-->
+<!--			<artifactId>spring-boot-starter-flyway</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.flywaydb</groupId>-->
+<!--			<artifactId>flyway-database-postgresql</artifactId>-->
+<!--			&lt;!&ndash; No version needed — Spring Boot 4.0.0 manages it to match flyway-core 11.14.1 &ndash;&gt;-->
+<!--		</dependency>-->
 
 
 	</dependencies>

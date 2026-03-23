@@ -1,1 +1,0 @@
-ALTER TABLE shop_setting RENAME TO shop_settings

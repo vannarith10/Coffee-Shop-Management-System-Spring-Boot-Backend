@@ -1,18 +1,52 @@
+
 version: "3.8"
 
 services:
+  postgres:
+    image: postgres:15
+    container_name: coffee-db
+    environment:
+      POSTGRES_DB: coffee_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+
   minio:
-    image: minio/minio:latest
-    container_name: minio_coffee
-    restart: unless-stopped
+    image: minio/minio
+    container_name: coffee-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: secret1234
     ports:
       - "9000:9000"
       - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: miniocoffee
-      MINIO_ROOT_PASSWORD: miniocoffee123
-    command: server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+    restart: always
+
+
+  backend:
+    image: coffee-shop-api:latest
+    build:
+      context: .
+    container_name: coffee-shop-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - minio
+    env_file:
+      - .env
+    restart: always
+
+
 volumes:
+  postgres_data:
   minio-data:
+
