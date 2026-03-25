@@ -20,7 +20,8 @@ public class CorsConfig {
 
         config.setAllowedOriginPatterns(List.of("http://localhost:*",
                 "https://*.ngrok-free.dev", "https://*.trycloudflare.com",
-                "https://words-imported-travelling-designers.trycloudflare.com"
+                "https://words-imported-travelling-designers.trycloudflare.com",
+                "https://iamvannarith.site"
         ));
 
 
