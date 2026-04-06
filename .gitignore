@@ -35,3 +35,6 @@ build/
 
 ### GitHub ###
 .env
+.env.dev
+.env.prod
+.env.*

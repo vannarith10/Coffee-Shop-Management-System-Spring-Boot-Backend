@@ -20,6 +20,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
 
+    //  Create Category Name
     @PostMapping
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest request) {
         CategoryResponse response = categoryService.createCategory(request);

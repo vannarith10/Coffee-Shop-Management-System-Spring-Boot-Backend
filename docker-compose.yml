@@ -1,52 +1,67 @@
-
-version: "3.8"
-
 services:
+
   postgres:
-    image: postgres:15
     container_name: coffee-db
+    image: postgres:15
     environment:
-      POSTGRES_DB: coffee_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret1234
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 
 
   minio:
-    image: minio/minio
     container_name: coffee-minio
+    image: minio/minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: secret1234
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
-      - minio-data:/data
+      - minio_data:/data
     restart: always
 
 
+
   backend:
-    image: coffee-shop-api:latest
+    container_name: coffee-backend
     build:
       context: .
-    container_name: coffee-shop-api
+    image: coffee-shop-api:latest
     ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
-      - minio
+      - "${APP_PORT:-8080}:8080"
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
     restart: always
 
 
 volumes:
   postgres_data:
-  minio-data:
+  minio_data:
+
+
+
+
+
+
+
+
 
