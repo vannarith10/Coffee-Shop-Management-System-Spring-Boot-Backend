@@ -78,20 +78,24 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/payway/callback").permitAll()
 
 
+                        // ====================
                         // Swagger
+                        // ====================
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        // ========================================================================================== //
-                        //
-                        //
-                        //
-                        //
-                        //
-                        //
-                        //
+
+
+
+
                         // ====================
                         // AUTH
                         // ====================
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+
+
+                        // ====================
+                        // ALLOW to ALL
+                        // ====================
+                        .requestMatchers(HttpMethod.GET, "/api/v1/product/user-menu").permitAll()
 
 
                         // ====================

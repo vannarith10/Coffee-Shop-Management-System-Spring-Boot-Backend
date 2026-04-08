@@ -4,6 +4,8 @@ import com.coffeeshop.api.dto.product.*;
 import com.coffeeshop.api.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+//import org.hibernate.query.Page;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -104,6 +106,19 @@ public class ProductController {
     @GetMapping("/top-selling-product")
     public ResponseEntity<TopSellingProductsResponse> topSellingProducts () {
         return  ResponseEntity.ok(productService.topSellingProducts());
+    }
+
+
+
+    //==============================
+    // User Menu | No Login required
+    //==============================
+    @GetMapping("/user-menu")
+    public Page<MenuItemsResponse> getMenuItems (
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return productService.getMenuItemsForAllUsers(page, size);
     }
 
 

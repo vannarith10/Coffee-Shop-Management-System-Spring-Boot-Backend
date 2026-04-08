@@ -14,6 +14,9 @@ import com.coffeeshop.api.service.UserService;
 import com.coffeeshop.api.util.TimeRangeUtil;
 import com.coffeeshop.api.websocket.ProductEventPublisher;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -111,7 +115,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Build and save the Product entity
         Product product = Product.builder()
-                .name(name.trim())
+                .name(normalizeProductName(name))
                 .price(price)
                 .costPrice(costPrice)
                 .imageKey(imageKey)
@@ -149,7 +153,18 @@ public class ProductServiceImpl implements ProductService {
                         .createdAt(product.getCreatedAt())
                         .build())
                 .build();
-    }//============================================================================
+    }
+
+    // Capitalizes the first letter of each word
+    private String normalizeProductName(String name) {
+        if (name == null || name.isBlank()) {
+            return name;
+        }
+        return Arrays.stream(name.trim().split("\\s+"))
+                .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
+    }
+    //============================================================================
 
 
 
@@ -551,6 +566,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
+
+
+    // Get Menu For All Users | No ROLE restricted
+    @Override
+    public Page<MenuItemsResponse> getMenuItemsForAllUsers(int page, int size) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("createdAt").descending()
+        );
+
+        return productRepository.findByAvailableTrue(pageable)
+                .map(p -> new MenuItemsResponse(
+                        p.getId(),
+                        p.getName(),
+                        p.getPrice(),
+                        p.getImageKey() != null ? imageStorageService.getPresignedGetUrl(p.getImageKey()).toString() : null,
+                        p.getDescription(),
+                        p.getCategory().getType(),
+                        p.getCategory().getName(),
+                        p.isAvailable()
+                ));
+    }
 
 
 

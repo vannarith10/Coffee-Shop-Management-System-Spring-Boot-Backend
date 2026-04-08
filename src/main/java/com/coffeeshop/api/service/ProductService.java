@@ -1,6 +1,7 @@
 package com.coffeeshop.api.service;
 
 import com.coffeeshop.api.dto.product.*;
+import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -29,5 +30,10 @@ public interface ProductService {
     MenuItemsResponse updateProductImage (UUID productId, MultipartFile image);
 
     TopSellingProductsResponse topSellingProducts ();
+
+    // It acts like "getMenuItems" but just no ROLE validation
+    // - I don't want to touch "getMenuItems" it works well
+    // - This time I want to use it with Pagination
+    Page<MenuItemsResponse> getMenuItemsForAllUsers(int page, int size);
 
 }

@@ -27,14 +27,7 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
-    private static final Set<String> PUBLIC_PATHS = Set.of(
-            "/auth/login",
-            "/auth/refresh",
-            "/auth/register",
-            "/actuator/health",
-            "/public",
-            "/payway/callback"
-    );
+
 
     @Override
     protected void doFilterInternal(
@@ -127,15 +120,23 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+
+
+
     private boolean isPublic(String path) {
         if (path == null) return true;
-        for (String root : PUBLIC_PATHS) {
-            if (path.equals(root) || path.startsWith(root + "/")) {
-                return true;
-            }
-        }
-        return false;
+
+        return path.startsWith("/api/v1/product/user-menu")
+                || path.startsWith("/api/v1/auth/")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/payway/callback")
+                || path.startsWith("/actuator");
     }
+
+
+
+
 
     private boolean isUserUsable(UserDetails userDetails) {
         return userDetails != null
