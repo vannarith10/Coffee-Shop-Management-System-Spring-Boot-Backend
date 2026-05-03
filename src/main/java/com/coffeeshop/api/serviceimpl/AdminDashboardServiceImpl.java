@@ -4,20 +4,29 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.BusinessAnalyticsSummaryResponse;
+import com.coffeeshop.api.dto.adminDashboard.TopSellingProductProjection;
+import com.coffeeshop.api.dto.adminDashboard.TopSellingProductRequest;
+import com.coffeeshop.api.dto.adminDashboard.TopSellingProductResponse;
+import com.coffeeshop.api.minio.ImageStorageService;
+import com.coffeeshop.api.repository.OrderItemRepository;
 import com.coffeeshop.api.repository.OrderRepository;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.UserService;
 import com.coffeeshop.api.util.DateWindows;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +40,8 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
     private static final OrderStatus DONE = OrderStatus.DONE;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ImageStorageService imageStorageService;
 
 
 
@@ -94,14 +105,152 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     }
 
 
+    // Helper functions
     private static double safeMoney(BigDecimal val) {
         return val.setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
-
-
     private static BigDecimal nvl(BigDecimal v) {
         return v != null ? v : BigDecimal.ZERO;
     }
 
 
+
+
+
+    // =====================
+    // Top Selling Products
+    // =====================
+    @Override
+    public TopSellingProductResponse topSellingProducts(TopSellingProductRequest request) {
+        // Validate User
+        User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+
+        // Validate Role
+        if (user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN role can get this resources.");
+        }
+
+        //
+        ZoneId zone = ZoneId.systemDefault();
+        Instant start;
+        Instant end = Instant.now();
+        switch (request.range()) {
+            case TODAY -> {
+                start = LocalDate.now(zone).atStartOfDay(zone).toInstant();
+            }
+            case THIS_WEEK -> {
+                start = LocalDate.now(zone).with(DayOfWeek.MONDAY).atStartOfDay(zone).toInstant();
+            }
+            case THIS_MONTH -> {
+                start = LocalDate.now(zone).withDayOfMonth(1).atStartOfDay(zone).toInstant();
+            }
+            case THIS_YEAR -> {
+                start = LocalDate.now(zone).withDayOfYear(1).atStartOfDay(zone).toInstant();
+            }
+            case ALL -> {
+                start = Instant.EPOCH;
+            }
+
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported range");
+        }
+
+        // Units target
+        final int unitsTarget = 200;
+
+        // Build Pageable
+        int page = request.page() != null && request.page() >= 0
+                ? request.page()
+                : 0;
+
+        // If request.size() < 10 -> return 10
+        // If request.size() > 50 -> return 50
+        int size = request.size() != null
+                ? Math.clamp(request.size(), 10, 50)
+                : 10;
+
+        Pageable pageable = PageRequest.of(page, size);
+
+
+        // Query repository
+        Page<TopSellingProductProjection> projections = orderItemRepository
+                .findTopSellingProductsByDateRange(
+                    OrderStatus.DONE,
+                    start,
+                    end,
+                    pageable
+        );
+
+        // Map Projections to response items
+        List<TopSellingProductResponse.TopProductItem> productItems = projections.getContent()
+                .stream()
+                .map(product -> new TopSellingProductResponse.TopProductItem(
+                        product.productId(),
+                        product.productName(),
+                        imageStorageService.getImageUrl(product.imageKey()),
+                        Math.toIntExact(product.unitsSold())
+                )).toList();
+
+        // Build Response
+        TopSellingProductResponse response = TopSellingProductResponse.builder()
+                .unitsTarget(unitsTarget)
+                .topProducts(productItems)
+                .build();
+
+        return response;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

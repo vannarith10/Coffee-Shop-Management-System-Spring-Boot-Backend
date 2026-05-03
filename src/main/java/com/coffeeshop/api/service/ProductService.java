@@ -29,7 +29,7 @@ public interface ProductService {
 
     MenuItemsResponse updateProductImage (UUID productId, MultipartFile image);
 
-    TopSellingProductsResponse topSellingProducts ();
+//    TopSellingProductResponse topSellingProducts (); Moved to Admin Dashboard Service
 
     // It acts like "getMenuItems" but just no ROLE validation
     // - I don't want to touch "getMenuItems" it works well

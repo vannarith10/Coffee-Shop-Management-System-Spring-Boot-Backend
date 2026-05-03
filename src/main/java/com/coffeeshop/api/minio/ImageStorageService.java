@@ -87,6 +87,13 @@ public class ImageStorageService {
 
 
 
+    // Get Image URL as String
+    public String getImageUrl (String key) {
+        return key != null ? getPresignedGetUrl(key).toString() : null;
+    }
+
+
+
     // Delete File
     public void delete(String key) {
         // Deletes the object by key

@@ -521,8 +521,9 @@ public class ProductServiceImpl implements ProductService {
     // =============================
     // Top Selling Products
     // =============================
+    /*
     @Override
-    public TopSellingProductsResponse topSellingProducts() {
+    public TopSellingProductResponse topSellingProducts() {
         // Get User
         User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
@@ -542,15 +543,15 @@ public class ProductServiceImpl implements ProductService {
 
         // Get List of Top selling product rows
         List<TopSellingProductRow> rows =
-                orderItemRepository.findTopSellingProductsForMonth(
+                orderItemRepository.findTopSellingProductsByDateRange(
                         OrderStatus.DONE,
                         range.startInclusive,
                         range.endExclusive
                 );
 
         // Build each product
-        List<TopSellingProductsResponse.TopProducts> topProducts = rows.stream()
-                .map(row -> new TopSellingProductsResponse.TopProducts(
+        List<TopSellingProductResponse.TopProducts> topProducts = rows.stream()
+                .map(row -> new TopSellingProductResponse.TopProducts(
                         row.productId(),
                         row.productName(),
                         row.imageKey() == null ? null : imageStorageService.getPresignedGetUrl(row.imageKey()).toString(),
@@ -559,11 +560,12 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
 
 
-        return TopSellingProductsResponse.builder()
+        return TopSellingProductResponse.builder()
                 .unitsTarget(unitsTarget)
                 .topProducts(topProducts)
                 .build();
     }
+    */// I moved this feature to "Admin Dashboard Service"
 
 
 
