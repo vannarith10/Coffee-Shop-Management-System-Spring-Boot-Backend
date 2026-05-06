@@ -3,9 +3,7 @@ package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
-import com.coffeeshop.api.dto.adminDashboard.BusinessAnalyticsSummaryResponse;
-import com.coffeeshop.api.dto.adminDashboard.TopSellingProductRequest;
-import com.coffeeshop.api.dto.adminDashboard.TopSellingProductResponse;
+import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.UserService;
@@ -47,6 +45,32 @@ public class AdminDashboardController {
     @PostMapping("/top-selling-products")
     public ResponseEntity<TopSellingProductResponse> getTopSellingProduct (@Valid @RequestBody TopSellingProductRequest request) {
         TopSellingProductResponse response = adminDashboardService.topSellingProducts(request);
+        return ResponseEntity.ok(response);
+    }
+
+
+
+    // Get All Products Statuses
+    @GetMapping("/products-statuses")
+    public ResponseEntity<ProductStockStatusResponse> productStockStatus (
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        ProductStockStatusResponse response = adminDashboardService.productStockStatus(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+
+
+    // Get All Staff Profiles Info
+    @GetMapping("/staff-profiles")
+    public ResponseEntity<GetAllStaffProfilesResponse> getStaffProfiles (
+            @RequestParam(defaultValue = "1")
+            int page,
+            @RequestParam(defaultValue = "10")
+            int size
+    ) {
+        GetAllStaffProfilesResponse response = adminDashboardService.getAllStaffProfiles(page, size);
         return ResponseEntity.ok(response);
     }
 

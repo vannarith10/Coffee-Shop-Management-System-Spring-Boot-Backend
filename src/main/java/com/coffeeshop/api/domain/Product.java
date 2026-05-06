@@ -1,5 +1,6 @@
 package com.coffeeshop.api.domain;
 
+import com.coffeeshop.api.domain.enums.ProductStock;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -50,8 +51,14 @@ public class Product {
     @JoinColumn(nullable = false)
     private Category category;
 
+
     @Column(nullable = false)
     private boolean available; // True = In stock
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "stock_status", length = 20)
+    private ProductStock stockStatus;
+
 
     @Column(updatable = false)
     private Instant createdAt;

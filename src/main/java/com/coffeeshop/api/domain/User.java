@@ -1,10 +1,13 @@
 package com.coffeeshop.api.domain;
 
 import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.domain.enums.Schedule;
+import com.coffeeshop.api.domain.enums.ShiftType;
 import com.coffeeshop.api.domain.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -44,4 +47,22 @@ public class User {
     private Instant createdAt;
 
     private Instant updatedAt;
+
+
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10) // MORNING, AFTERNOON, FULL_DAY
+    private ShiftType shiftType;
+
+
+
+    // List of Enum will not work as well as a single Enum
+    @ElementCollection(targetClass = Schedule.class, fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "user_schedules",
+            joinColumns = @JoinColumn(name = "user_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "schedule_day", nullable = false, length = 10)
+    private List<Schedule> schedules;
 }

@@ -2,6 +2,8 @@ package com.coffeeshop.api.util;
 
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.domain.enums.Schedule;
+import com.coffeeshop.api.domain.enums.ShiftType;
 import com.coffeeshop.api.domain.enums.Status;
 import com.coffeeshop.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.time.Instant;
+import java.util.List;
 
 
 @Component
@@ -25,12 +28,16 @@ class DefaultUserInitializer implements ApplicationRunner {
     @Override
     public void run(@NonNull ApplicationArguments args) {
 
+        // I just added ShiftType and Schedule on Wednesday, 6th May 2026
+
         // User 1
         createUserIfNotExists(
                 "Vyra Vannrith",
                 "vyra.vannarith",
                 "admin#1234",
-                Role.ADMIN
+                Role.ADMIN,
+                ShiftType.FULL_DAY,
+                List.of(Schedule.MONDAY, Schedule.TUESDAY, Schedule.WEDNESDAY, Schedule.FRIDAY, Schedule.SATURDAY, Schedule.SUNDAY)
         );
 
         // User 2
@@ -38,7 +45,9 @@ class DefaultUserInitializer implements ApplicationRunner {
                 "Lim Ansoleaphea",
                 "lim.ansoleaphea",
                 "cashier#1234",
-                Role.CASHIER
+                Role.CASHIER,
+                ShiftType.MORNING,
+                List.of(Schedule.MONDAY, Schedule.TUESDAY, Schedule.WEDNESDAY, Schedule.FRIDAY, Schedule.SATURDAY, Schedule.SUNDAY)
         );
 
         // User 3
@@ -46,7 +55,9 @@ class DefaultUserInitializer implements ApplicationRunner {
                 "Sareach Puthbormey",
                 "sareach.puthbormey",
                 "cashier#1234",
-                Role.CASHIER
+                Role.CASHIER,
+                ShiftType.AFTERNOON,
+                List.of(Schedule.MONDAY, Schedule.TUESDAY, Schedule.WEDNESDAY, Schedule.FRIDAY, Schedule.SATURDAY, Schedule.SUNDAY)
         );
 
         // User 4
@@ -54,7 +65,9 @@ class DefaultUserInitializer implements ApplicationRunner {
                 "Leum Sengheang",
                 "leum.sengheang",
                 "barista#1234",
-                Role.BARISTA
+                Role.BARISTA,
+                ShiftType.FULL_DAY,
+                List.of(Schedule.MONDAY, Schedule.TUESDAY, Schedule.WEDNESDAY, Schedule.FRIDAY, Schedule.SATURDAY, Schedule.SUNDAY)
         );
     }
 
@@ -62,7 +75,9 @@ class DefaultUserInitializer implements ApplicationRunner {
     private void createUserIfNotExists(String name,
                                        String username,
                                        String password,
-                                       Role role) {
+                                       Role role,
+                                       ShiftType shiftType,
+                                       List<Schedule> schedules) {
         if(userRepo.existsByUsername(username)) return;
 
         User user = User.builder()
@@ -72,6 +87,9 @@ class DefaultUserInitializer implements ApplicationRunner {
                 .role(role)
                 .status(Status.ACTIVE)
                 .isActive(true)
+                .shiftType(shiftType)
+                .schedules(schedules)
+
                 .createdAt(Instant.now())
                 .build();
 

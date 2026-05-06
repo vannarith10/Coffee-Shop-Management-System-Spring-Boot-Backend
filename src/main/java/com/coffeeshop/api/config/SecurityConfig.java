@@ -122,6 +122,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/summary").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.GET, "/api/v1/product/top-selling-product").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin-dashboard/top-selling-products").hasRole(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/products-statuses").hasRole(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/staff-profiles").hasRole(Role.ADMIN.toString())
 
 
                         // ====================
