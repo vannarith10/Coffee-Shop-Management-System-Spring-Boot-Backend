@@ -44,6 +44,9 @@ public record GetAllProductsResponse(
             @JsonProperty("price")
             BigDecimal price,
 
+            @JsonProperty("cost_price")
+            BigDecimal costPrice,
+
             @JsonProperty("description")
             String description,
 

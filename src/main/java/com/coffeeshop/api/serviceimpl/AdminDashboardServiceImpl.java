@@ -387,6 +387,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                         .id(product.getId())
                         .name(product.getName())
                         .price(product.getPrice())
+                        .costPrice(product.getCostPrice())
                         .description(product.getDescription())
                         .imageUrl(imageStorageService.getImageUrl(product.getImageKey()))
                         .categoryType(product.getCategory().getType())
