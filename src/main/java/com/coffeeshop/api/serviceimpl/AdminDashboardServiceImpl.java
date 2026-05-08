@@ -3,6 +3,7 @@ package com.coffeeshop.api.serviceimpl;
 import com.coffeeshop.api.domain.Product;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.OrderStatus;
+import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
@@ -31,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -409,7 +411,30 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
 
+    // ====================
+    // Update Stock Status
+    // ====================
+    @Override
+    public void updateProductStockStatus(UUID productId, ProductStock newStockStatus) {
+        findUserAndValidateAdminRole();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found."));
+        product.setStockStatus(newStockStatus);
+        productRepository.save(product);
+    }
 
+
+
+
+    // Helper
+    private void findUserAndValidateAdminRole () {
+        User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
+        );
+        if (user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resource.");
+        }
+    }
 
 }
 

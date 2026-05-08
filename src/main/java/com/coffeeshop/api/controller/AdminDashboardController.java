@@ -2,6 +2,7 @@ package com.coffeeshop.api.controller;
 
 
 import com.coffeeshop.api.domain.User;
+import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -97,6 +100,17 @@ public class AdminDashboardController {
     ) {
         GetAllProductsResponse response = adminDashboardService.getProducts(page, size);
         return ResponseEntity.ok(response);
+    }
+
+
+
+    @PutMapping("/product/{id}/stock-status")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateProductStockStatus (
+            @PathVariable UUID id,
+            @RequestParam ProductStock status
+            ) {
+        adminDashboardService.updateProductStockStatus(id, status);
     }
 
 

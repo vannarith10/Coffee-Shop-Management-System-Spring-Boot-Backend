@@ -126,6 +126,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/staff-profiles").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin-dashboard/create-employee-account").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/get-all-products").hasRole(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/admin-dashboard/product/{id}/stock-status").hasRole(Role.ADMIN.toString())
 
 
                         // ====================
