@@ -48,13 +48,9 @@ public class User {
 
     private Instant updatedAt;
 
-
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10) // MORNING, AFTERNOON, FULL_DAY
     private ShiftType shiftType;
-
-
 
     // List of Enum will not work as well as a single Enum
     @ElementCollection(targetClass = Schedule.class, fetch = FetchType.EAGER)

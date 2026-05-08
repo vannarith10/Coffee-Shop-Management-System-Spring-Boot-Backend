@@ -5,6 +5,10 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
+import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
+import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.OrderItemRepository;
 import com.coffeeshop.api.repository.OrderRepository;
@@ -13,20 +17,20 @@ import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.UserService;
 import com.coffeeshop.api.util.DateWindows;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +47,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final OrderItemRepository orderItemRepository;
     private final ImageStorageService imageStorageService;
     private final ProductRepository productRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
     // ====================================
@@ -261,14 +266,14 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resources.");
         }
         // Get page and size
-        int getPage = page > 0 ? page - 1 : 1;
+        int getPage = page > 0 ? page - 1 : 0;
         int getSize = Math.clamp(size, 10, 50);
         Pageable pageable = PageRequest.of(getPage, getSize);
         // Get Paginated of Users
         Page<User> userPage = userRepository.findAll(pageable);
         // Build Pagination response
         GetAllStaffProfilesResponse.Pagination pagination = GetAllStaffProfilesResponse.Pagination.builder()
-                .page(getPage)
+                .page(getPage + 1)
                 .size(getSize)
                 .totalPages(userPage.getTotalPages())
                 .totalItems(userPage.getTotalElements())
@@ -281,6 +286,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .map(userStaff -> GetAllStaffProfilesResponse.Staff.builder()
                             .id(userStaff.getId())
                             .name(userStaff.getName())
+                            .username(userStaff.getUsername())
                             .role(userStaff.getRole())
                             .shift(userStaff.getShiftType())
                             .schedules(userStaff.getSchedules())
@@ -299,11 +305,113 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
 
+
+    // =================
+    // ADD NEW EMPLOYEE
+    // =================
+    @Transactional
+    @Override
+    public AddNewEmployeeResponse addNewEmployee(AddNewEmployeeRequest request) {
+        // Get user
+        User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // Validate Role
+        if (user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resources.");
+        }
+
+        // INPUT VALIDATION
+        // validate username, must be unique
+        if (userRepository.existsByUsername(request.username().trim())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username is already taken.");
+        }
+
+        // validate password
+        if (!request.password().trim().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Weak password");
+            // Allow EX: Password@1, Admin@123, Secure!9A
+        }
+
+        User newUser = User.builder()
+                .name(request.fullName().trim())
+                .username(request.username().trim())
+                .password(passwordEncoder.encode(request.password().trim()))
+                .role(request.role())
+                .isActive(true)
+                .status(request.status())
+                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant())
+                .shiftType(request.shift())
+                .schedules(request.schedules())
+                .build();
+        User saved = userRepository.save(newUser);
+
+        return AddNewEmployeeResponse.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .username(saved.getUsername())
+                .role(saved.getRole())
+                .shift(saved.getShiftType())
+                .schedules(saved.getSchedules())
+                .email("")
+                .phoneNumber("")
+                .status(saved.getStatus())
+                .imageUrl("")
+                .build();
+    }
+
+
+
+
+    // =================
+    // Get All Products
+    // =================
+    @Override
+    public GetAllProductsResponse getProducts(int page, int size) {
+        User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
+        );
+        if (user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resource.");
+        }
+        int pageNumber = page > 0 ? page -1 : 0;
+        int pageSize = Math.clamp(size, 10, 50);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        Page<Product> products = productRepository.findAll(pageable);
+
+        List<GetAllProductsResponse.ProductItem> productItems = products.getContent()
+                .stream()
+                .map(product -> GetAllProductsResponse.ProductItem.builder()
+                        .id(product.getId())
+                        .name(product.getName())
+                        .price(product.getPrice())
+                        .description(product.getDescription())
+                        .imageUrl(imageStorageService.getImageUrl(product.getImageKey()))
+                        .categoryType(product.getCategory().getType())
+                        .categoryName(product.getCategory().getName())
+                        .stockStatus(product.getStockStatus())
+                        .build())
+                .toList();
+
+        GetAllProductsResponse.Pagination pagination = GetAllProductsResponse.Pagination.builder()
+                .page(pageNumber + 1)
+                .size(pageSize)
+                .totalPages(products.getTotalPages())
+                .totalItems(products.getTotalElements())
+                .build();
+
+
+        return GetAllProductsResponse.builder()
+                .pagination(pagination)
+                .productItems(productItems)
+                .build();
+    }
+
+
+
+
+
 }
-
-
-
-
 
 
 

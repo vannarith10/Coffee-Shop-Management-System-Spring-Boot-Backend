@@ -1,4 +1,4 @@
-package com.coffeeshop.api.dto.adminDashboard;
+package com.coffeeshop.api.dto.adminDashboard.staff;
 
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.domain.enums.Schedule;
@@ -30,6 +30,9 @@ public record GetAllStaffProfilesResponse(
 
             @JsonProperty("name")
             String name,
+
+            @JsonProperty("username")
+            String username,
 
             @JsonProperty("role")
             Role role,

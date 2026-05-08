@@ -4,6 +4,10 @@ package com.coffeeshop.api.controller;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
+import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
+import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.UserService;
@@ -71,6 +75,27 @@ public class AdminDashboardController {
             int size
     ) {
         GetAllStaffProfilesResponse response = adminDashboardService.getAllStaffProfiles(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+
+
+    @PostMapping("/create-employee-account")
+    public ResponseEntity<AddNewEmployeeResponse> addNewEmployee (
+            @Valid @RequestBody
+            AddNewEmployeeRequest request
+    ) {
+        AddNewEmployeeResponse response = adminDashboardService.addNewEmployee(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+
+
+    @GetMapping("/get-all-products")
+    public ResponseEntity<GetAllProductsResponse> getProducts (
+            @RequestParam int page, @RequestParam int size
+    ) {
+        GetAllProductsResponse response = adminDashboardService.getProducts(page, size);
         return ResponseEntity.ok(response);
     }
 
