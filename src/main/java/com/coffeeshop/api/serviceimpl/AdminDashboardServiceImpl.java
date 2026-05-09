@@ -1,20 +1,20 @@
 package com.coffeeshop.api.serviceimpl;
 
+import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
 import com.coffeeshop.api.domain.User;
+import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
+import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.minio.ImageStorageService;
-import com.coffeeshop.api.repository.OrderItemRepository;
-import com.coffeeshop.api.repository.OrderRepository;
-import com.coffeeshop.api.repository.ProductRepository;
-import com.coffeeshop.api.repository.UserRepository;
+import com.coffeeshop.api.repository.*;
 import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.UserService;
 import com.coffeeshop.api.util.DateWindows;
@@ -26,12 +26,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -50,6 +52,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final ImageStorageService imageStorageService;
     private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CategoryRepository categoryRepository;
 
 
     // ====================================
@@ -423,6 +426,83 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         product.setStockStatus(newStockStatus);
         productRepository.save(product);
     }
+
+
+
+
+    // =========================
+    // Update Product Partially
+    // =========================
+    @Transactional
+    @Override
+    public GetAllProductsResponse.ProductItem updateProductPartially(UUID productId, UpdateProductRequest request, MultipartFile file) {
+        findUserAndValidateAdminRole();
+        Product product = productRepository.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found."));
+
+        if (request.isEmpty() && (file == null || file.isEmpty())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one field or image must be provided for update.");
+        }
+
+        // Apply partial updates
+        if (request.name() != null) {
+            product.setName(request.name().trim());
+        }
+
+        if (request.categoryName() != null) {
+            Category categoryName = categoryRepository.findByNameIgnoreCase(
+                    request.categoryName()).orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Category name not found."));
+            product.setCategory(categoryName);
+        }
+
+        if (request.sellingPrice() != null ) {
+            product.setPrice(request.sellingPrice());
+        }
+
+        if (request.costPrice() != null ) {
+            product.setCostPrice(request.costPrice());
+        }
+
+        if (request.description() != null && !request.description().isEmpty()) {
+            product.setDescription(request.description().trim());
+        }
+
+        // Update if image exists
+        if (file != null && !file.isEmpty()) {
+            imageStorageService.ensureBucketExists();
+
+            String categoryFolder = product.getCategory().getName();
+            String folder = imageStorageService.buildFolder(categoryFolder);
+            String imageKey = null;
+
+            try {
+                imageKey = imageStorageService.upload(file, folder); // Returns object key (not a URL)
+            } catch (Exception ex) {
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to upload image to storage",
+                        ex
+                );
+            }
+            product.setImageKey(imageKey);
+        }
+
+        Product p = productRepository.save(product);
+
+        return GetAllProductsResponse.ProductItem.builder()
+                .id(p.getId())
+                .name(p.getName())
+                .price(p.getPrice())
+                .costPrice(p.getCostPrice())
+                .description(p.getDescription())
+                .imageUrl(imageStorageService.getImageUrl(p.getImageKey()))
+                .categoryType(p.getCategory().getType())
+                .categoryName(p.getCategory().getName())
+                .stockStatus(p.getStockStatus())
+                .build();
+    }
+
+
 
 
 

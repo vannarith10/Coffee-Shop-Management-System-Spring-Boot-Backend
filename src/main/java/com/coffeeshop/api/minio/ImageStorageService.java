@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -100,5 +101,22 @@ public class ImageStorageService {
         s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
     }
 
+
+    // Copy & Paste it from ProductServiceImpl on 10-May-2026
+    // Normalizes folder path: products/<category-slug> or products/uncategorized
+    public String buildFolder(String categoryName) {
+        String slug = slugify(categoryName);
+        if (slug.isBlank()) slug = "uncategorized";
+        return "products/" + slug;
+    }
+
+    // Simple slugifier for folders
+    public String slugify(String input) {
+        if (input == null) return "";
+        String s = input.toLowerCase(Locale.ROOT).trim();
+        s = s.replaceAll("[^a-z0-9]+", "-");
+        s = s.replaceAll("(^-+)|(-+$)", "");
+        return s;
+    }
 
 }

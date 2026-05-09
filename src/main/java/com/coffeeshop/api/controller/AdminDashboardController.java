@@ -6,6 +6,7 @@ import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
+import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
@@ -15,10 +16,13 @@ import com.coffeeshop.api.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
@@ -111,6 +115,23 @@ public class AdminDashboardController {
             @RequestParam ProductStock status
             ) {
         adminDashboardService.updateProductStockStatus(id, status);
+    }
+
+
+
+    @PatchMapping(value = "/product/{id}/patch-product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GetAllProductsResponse.ProductItem> updateProductPartially (
+            @PathVariable UUID id,
+            @RequestPart(value = "name", required = false) String name,
+            @RequestPart(value = "category_name", required = false) String categoryName,
+            @RequestPart(value = "selling_price", required = false) BigDecimal sellingPrice,
+            @RequestPart(value = "cost_price", required = false) BigDecimal costPrice,
+            @RequestPart(value = "description", required = false) String description,
+            @RequestPart(value = "image", required = false) MultipartFile file
+            ) {
+        UpdateProductRequest request = new UpdateProductRequest(name, categoryName, sellingPrice, costPrice, description);
+        GetAllProductsResponse.ProductItem response = adminDashboardService.updateProductPartially(id, request, file);
+        return ResponseEntity.ok(response);
     }
 
 
