@@ -1,5 +1,9 @@
 package com.coffeeshop.api.domain.enums;
 
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
 public enum ProductStock {
     IN_STOCK,
     LOW_STOCK,

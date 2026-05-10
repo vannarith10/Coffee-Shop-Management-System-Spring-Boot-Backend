@@ -2,6 +2,7 @@ package com.coffeeshop.api.service;
 
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.dto.adminDashboard.*;
+import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
@@ -28,4 +29,6 @@ public interface AdminDashboardService {
     void updateProductStockStatus (UUID productId, ProductStock newStockStatus);
 
     GetAllProductsResponse.ProductItem updateProductPartially (UUID productId, UpdateProductRequest request, MultipartFile file);
+
+    GetAllProductsResponse.ProductItem addProduct (AddProductRequest request, MultipartFile image);
 }

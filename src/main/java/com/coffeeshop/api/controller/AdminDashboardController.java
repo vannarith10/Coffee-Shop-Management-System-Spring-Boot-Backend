@@ -5,6 +5,7 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
+import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
@@ -14,6 +15,7 @@ import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.AdminDashboardService;
 import com.coffeeshop.api.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -119,21 +121,53 @@ public class AdminDashboardController {
 
 
 
+    //
+    //  UPDATE PRODUCT
+    //
     @PatchMapping(value = "/product/{id}/patch-product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllProductsResponse.ProductItem> updateProductPartially (
             @PathVariable UUID id,
-            @RequestPart(value = "name", required = false) String name,
-            @RequestPart(value = "category_name", required = false) String categoryName,
-            @RequestPart(value = "selling_price", required = false) BigDecimal sellingPrice,
-            @RequestPart(value = "cost_price", required = false) BigDecimal costPrice,
-            @RequestPart(value = "description", required = false) String description,
-            @RequestPart(value = "image", required = false) MultipartFile file
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "category_name", required = false) String categoryName,
+            @RequestParam(value = "selling_price", required = false) BigDecimal sellingPrice,
+            @RequestParam(value = "cost_price", required = false) BigDecimal costPrice,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "image", required = false) MultipartFile file
             ) {
         UpdateProductRequest request = new UpdateProductRequest(name, categoryName, sellingPrice, costPrice, description);
         GetAllProductsResponse.ProductItem response = adminDashboardService.updateProductPartially(id, request, file);
         return ResponseEntity.ok(response);
     }
 
+
+
+
+    // Use @RequestParam for text fields and files.
+    // Use @RequestPart only when a part contains structured content such as JSON.
+    //
+    //  ADD NEW PRODUCT
+    //
+    @PostMapping(value = "/add-product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GetAllProductsResponse.ProductItem> addNewProduct (
+            @RequestParam("name") @NotBlank String name,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("cost") BigDecimal cost,
+            @RequestParam("category_name") String categoryName,
+            @RequestParam("stock_status") String stockStatus,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "image", required = false) MultipartFile image
+    ) {
+        AddProductRequest request = AddProductRequest.builder()
+                .name(name)
+                .sellingPrice(price)
+                .costPrice(cost)
+                .categoryName(categoryName)
+                .stockStatus(stockStatus)
+                .description(description)
+                .build();
+        GetAllProductsResponse.ProductItem response = adminDashboardService.addProduct(request, image);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
 
 }

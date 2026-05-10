@@ -25,10 +25,10 @@ public record UpdateProductRequest(
         String description
 ) {
         public boolean isEmpty () {
-                return name == null
-                        && categoryName == null
-                        && sellingPrice == null
-                        && costPrice == null
-                        && description == null;
+                return (name == null || name.isBlank())
+                        && (categoryName == null || categoryName.isBlank())
+                        && (sellingPrice == null)
+                        && (costPrice == null)
+                        && (description == null || description.isBlank());
         }
 }

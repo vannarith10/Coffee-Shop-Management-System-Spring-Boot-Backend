@@ -8,6 +8,7 @@ import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
+import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
@@ -32,6 +33,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -430,40 +432,45 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
 
-    // =========================
-    // Update Product Partially
-    // =========================
+    // ===============================
+    // [+ -] Update Product Partially
+    // ===============================
     @Transactional
     @Override
     public GetAllProductsResponse.ProductItem updateProductPartially(UUID productId, UpdateProductRequest request, MultipartFile file) {
         findUserAndValidateAdminRole();
-        Product product = productRepository.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found."));
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found."));
 
         if (request.isEmpty() && (file == null || file.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one field or image must be provided for update.");
         }
 
-        // Apply partial updates
-        if (request.name() != null) {
+        // Apply name if provided
+        if (request.name() != null && !request.name().trim().isEmpty()) {
             product.setName(request.name().trim());
         }
 
-        if (request.categoryName() != null) {
+        // Apply new category name if provided
+        if (request.categoryName() != null && !request.categoryName().trim().isEmpty()) {
             Category categoryName = categoryRepository.findByNameIgnoreCase(
                     request.categoryName()).orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "Category name not found."));
             product.setCategory(categoryName);
         }
 
-        if (request.sellingPrice() != null ) {
+        // Apply new selling price if provided
+        if (request.sellingPrice() != null && request.sellingPrice().compareTo(BigDecimal.ZERO) > 0) {
             product.setPrice(request.sellingPrice());
         }
 
-        if (request.costPrice() != null ) {
+        // Apply new cost price if provided
+        if (request.costPrice() != null && request.costPrice().compareTo(BigDecimal.ZERO) > 0) {
             product.setCostPrice(request.costPrice());
         }
 
-        if (request.description() != null && !request.description().isEmpty()) {
+        // Apply new Description if provided
+        if (request.description() != null && !request.description().trim().isEmpty()) {
             product.setDescription(request.description().trim());
         }
 
@@ -486,7 +493,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             }
             product.setImageKey(imageKey);
         }
-
+        product.setUpdatedAt(Instant.now());
         Product p = productRepository.save(product);
 
         return GetAllProductsResponse.ProductItem.builder()
@@ -507,7 +514,114 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
 
-    // Helper
+
+    // ====================
+    // [+] Add New Product
+    // ====================
+    @Transactional
+    @Override
+    public GetAllProductsResponse.ProductItem addProduct(AddProductRequest request, MultipartFile image) {
+        findUserAndValidateAdminRole();
+
+        String name;
+        BigDecimal price;
+        BigDecimal cost;
+        Category category;
+        ProductStock stock;
+        if(request.name() == null || request.name().trim().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product name is required.");
+        }else if(request.sellingPrice() == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selling price is required.");
+        }else if(request.costPrice() == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost price is required.");
+        }else if(request.categoryName() == null || request.categoryName().trim().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category name is required.");
+        }else if(request.stockStatus() == null || request.stockStatus().trim().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stock status is required.");
+        }else{
+            name = request.name().trim();
+            price = request.sellingPrice();
+            cost = request.costPrice();
+            category = categoryRepository.findByNameIgnoreCase(request.categoryName().trim()).orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category name not found.")
+            );
+            stock = Arrays.stream(ProductStock.values())
+                    .filter(status -> status.name().equalsIgnoreCase(request.stockStatus().trim()))
+                    .findFirst()
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid stock status: " + request.stockStatus().trim()
+                        + " - Available statuses: "
+                        + Arrays.stream(ProductStock.values()).map(Enum::name).collect(java.util.stream.Collectors.joining(", "))));
+        }
+
+        // Name validation
+        if(productRepository.existsByNameIgnoreCase(name)){
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Product name is already exist.");
+        }
+
+        // Validate Price
+        if (price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selling price must be greater than zero.");
+        }
+        if (cost.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost price cannot be zero or negative.");
+        }
+        if (price.compareTo(cost) < 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Selling price must be greater than or equal to cost price."
+            );
+        }
+
+
+        String imageKey = null;
+        if(image != null && !image.isEmpty()){
+            imageStorageService.ensureBucketExists();
+
+            String folder = imageStorageService.buildFolder(category.getName());
+            try {
+                imageKey = imageStorageService.upload(image, folder);
+            }catch(Exception ex){
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to upload image to storage",
+                        ex
+                );
+            }
+        }
+
+
+        Product newProduct = Product.builder()
+                .name(name)
+                .price(price)
+                .costPrice(cost)
+                .description(request.description() != null ? request.description().trim() : null)
+                .imageKey(imageKey)
+                .category(category)
+                .stockStatus(stock)
+                .available(true)
+                .createdAt(Instant.now())
+                .build();
+        Product saved = productRepository.save(newProduct);
+
+
+        return GetAllProductsResponse.ProductItem.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .price(saved.getPrice())
+                .costPrice(saved.getCostPrice())
+                .description(saved.getDescription())
+                .imageUrl(imageStorageService.getImageUrl(saved.getImageKey()))
+                .categoryType(saved.getCategory().getType())
+                .categoryName(saved.getCategory().getName())
+                .stockStatus(saved.getStockStatus())
+                .build();
+    }
+
+
+
+
+
+    // Helper - Validate Admin Role
     private void findUserAndValidateAdminRole () {
         User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
