@@ -11,6 +11,7 @@ import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
+import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
@@ -33,10 +34,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -616,6 +614,173 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .stockStatus(saved.getStockStatus())
                 .build();
     }
+
+
+
+
+
+
+    //================
+    // REPORTS
+    //================
+    @Override
+    public ReportDashboardResponse reports(Integer year, Integer month) {
+        findUserAndValidateAdminRole();
+
+        YearMonth getYearMonth;
+        if (year != null && month != null) {
+            getYearMonth = YearMonth.of(year, month);
+        } else {
+            getYearMonth = YearMonth.now();
+        }
+        Instant startOfMonth = getYearMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endOfMonth = getYearMonth.atEndOfMonth().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        YearMonth prevMonth = getYearMonth.minusMonths(1);
+        Instant startOfPrevMonth = prevMonth.atDay(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endOfPrevMonth = prevMonth.atEndOfMonth().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        // Summary
+        BigDecimal currentRevenue = orderRepository.getTotalRevenue(startOfMonth, endOfMonth);
+        BigDecimal prevRevenue = orderRepository.getTotalRevenue(startOfPrevMonth, endOfPrevMonth);
+
+        BigDecimal currentProfit = orderRepository.getGrossProfit(startOfMonth, endOfMonth);
+        BigDecimal prevProfit = orderRepository.getGrossProfit(startOfPrevMonth, endOfPrevMonth);
+
+        ReportDashboardResponse.Summary summary = ReportDashboardResponse.Summary.builder()
+                .grossProfit(buildMetric(currentProfit, prevProfit))
+                .netRevenue(buildMetric(currentRevenue, prevRevenue))
+                .build();
+
+        // Revenue Trends
+        List<BigDecimal> revenueTrends = buildRevenueTrendsForMonth(getYearMonth, startOfMonth, endOfMonth);
+
+        // Sales by Category
+        List<ReportDashboardResponse.CategorySales> salesByCategory = buildSalesByCategory(startOfMonth, endOfMonth, currentRevenue);
+
+        // Busiest Hours
+        List<List<Integer>> busiestHours = buildBusiestHours(startOfMonth, endOfMonth);
+
+        return ReportDashboardResponse.builder()
+                .summary(summary)
+                .revenueTrends(revenueTrends)
+                .salesByCategory(salesByCategory)
+                .busiesHours(busiestHours)
+                .build();
+    }
+
+    // Helper -
+    private ReportDashboardResponse.Metric buildMetric (BigDecimal current, BigDecimal previous) {
+        double growth = calculateGrowthPct(current, previous);
+        return ReportDashboardResponse.Metric.builder()
+                .value(current.setScale(2, RoundingMode.HALF_UP))
+                .growthPtc(growth)
+                .build();
+    }
+
+    // Helper
+    private double calculateGrowthPct (BigDecimal current, BigDecimal previous) {
+        if (previous == null || previous.compareTo(BigDecimal.ZERO) == 0) {
+            return 0.0;
+        }
+        return current.subtract(previous)
+                .divide(previous, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .doubleValue();
+    }
+
+    // Helper
+    private List<BigDecimal> buildRevenueTrendsForMonth (YearMonth yearMonth, Instant startOfMonth, Instant endOfMonth) {
+        List<Object[]> dailyData = orderRepository.getDailyRevenue(startOfMonth, endOfMonth);
+
+        Map<LocalDate, BigDecimal> revenueMap = new HashMap<>();
+        for (Object[] row : dailyData) {
+            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+            BigDecimal revenue = (BigDecimal) row[1];
+            revenueMap.put(date, revenue);
+        }
+
+        int daysInMonth = yearMonth.lengthOfMonth();
+        List<BigDecimal> trends = new ArrayList<>();
+
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        LocalDate current = yearMonth.atDay(1);
+
+        for (int i=1; i<=daysInMonth; i++) {
+            BigDecimal value = revenueMap.getOrDefault(current, BigDecimal.ZERO);
+
+            if (current.isAfter(today)) {
+                value = BigDecimal.ZERO;
+            }
+
+            trends.add(value.setScale(2, RoundingMode.HALF_UP));
+            current = current.plusDays(1);
+        }
+        return trends;
+    }
+
+    // Helper
+    private List<ReportDashboardResponse.CategorySales> buildSalesByCategory(
+            Instant start,
+            Instant end,
+            BigDecimal totalRevenue) {
+
+        List<Object[]> data = orderRepository.getSalesByCategory(start, end);
+
+        List<ReportDashboardResponse.CategorySales> list = new ArrayList<>();
+
+        for (Object[] row : data) {
+            Category category = (Category) row[0];
+            String label = category.getName();
+            BigDecimal revenue = (BigDecimal) row[1];
+
+            int percentage = (totalRevenue != null && totalRevenue.compareTo(BigDecimal.ZERO) > 0)
+                    ? revenue.multiply(BigDecimal.valueOf(100))
+                      .divide(totalRevenue, 0, RoundingMode.HALF_UP)
+                      .intValue()
+                    : 0;
+
+            list.add(ReportDashboardResponse.CategorySales.builder()
+                    .label(label)
+                    .percentage(percentage)
+                    .revenue(revenue.setScale(2, RoundingMode.HALF_UP))
+                    .build());
+        }
+        return list;
+    }
+
+    // Helper
+    private List<List<Integer>> buildBusiestHours(Instant start, Instant end) {
+
+        List<Object[]> data = orderRepository.getHourlyDistribution(start, end);
+
+        // 7 days (0=Sunday ... 6=Saturday) x 24 hours
+        int[][] hours = new int[7][24];
+
+        for (Object[] row : data) {
+            int weekday = ((Number) row[0]).intValue();   // EXTRACT(DOW)
+            int hour = ((Number) row[1]).intValue();
+            int count = ((Number) row[2]).intValue();
+
+            if (weekday >= 0 && weekday < 7 && hour >= 0 && hour < 24) {
+                hours[weekday][hour] = count;
+            }
+        }
+
+        // Convert to List<List<Integer>>
+        List<List<Integer>> result = new ArrayList<>();
+        for (int[] day : hours) {
+            List<Integer> dayList = new ArrayList<>();
+            for (int count : day) {
+                dayList.add(count);
+            }
+            result.add(dayList);
+        }
+
+        return result;
+    }
+
+
 
 
 

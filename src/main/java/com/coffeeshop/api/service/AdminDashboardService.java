@@ -5,6 +5,7 @@ import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
+import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
@@ -31,4 +32,6 @@ public interface AdminDashboardService {
     GetAllProductsResponse.ProductItem updateProductPartially (UUID productId, UpdateProductRequest request, MultipartFile file);
 
     GetAllProductsResponse.ProductItem addProduct (AddProductRequest request, MultipartFile image);
+
+    ReportDashboardResponse reports (Integer year, Integer month);
 }

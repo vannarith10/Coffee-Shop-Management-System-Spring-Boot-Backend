@@ -8,6 +8,7 @@ import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
+import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
@@ -168,6 +169,20 @@ public class AdminDashboardController {
         GetAllProductsResponse.ProductItem response = adminDashboardService.addProduct(request, image);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+
+
+
+    @GetMapping("/reports")
+    public ResponseEntity<ReportDashboardResponse> reports (
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
+    ) {
+        ReportDashboardResponse response = adminDashboardService.reports(year, month);
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
 }

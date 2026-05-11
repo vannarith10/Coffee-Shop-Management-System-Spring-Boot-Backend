@@ -2,7 +2,6 @@ package com.coffeeshop.api.repository;
 
 import com.coffeeshop.api.domain.Order;
 import com.coffeeshop.api.domain.enums.OrderStatus;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,10 +20,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             Instant start,
             Instant end
     );
-
-    List<Order> findTop50ByStatusInOrderByCreatedAtAsc(Collection<OrderStatus> statuses);
-
-    List<Order> findByStatusInOrderByCreatedAtAsc(Collection<OrderStatus> statuses, Pageable pageable);
 
 
     @Query("""
@@ -82,4 +77,113 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
 
 
+    // Total Revenue in a period (for Summary - Net Revenue)
+    @Query("""
+        SELECT COALESCE(SUM(o.totalAmount), 0)
+        FROM Order o
+        WHERE o.status = 'DONE'
+            AND o.createdAt >= :start
+            AND o.createdAt < :end
+    """)
+    BigDecimal getTotalRevenue (@Param("start") Instant start, @Param("end") Instant end);
+
+
+
+
+    // Gross Profit in a period
+    @Query("""
+        SELECT COALESCE(SUM(o.totalAmount - (o.subtotalAmount * 0.40)), 0)
+        FROM Order o
+        WHERE o.status = 'DONE'
+            AND o.createdAt >= :start
+            AND o.createdAt < :end
+    """)
+    BigDecimal getGrossProfit(@Param("start") Instant start, @Param("end") Instant end);
+
+
+
+
+    // Daily Revenue for Revenue Trends (per day)
+    @Query("""
+        SELECT function('date', o.createdAt), COALESCE(SUM(o.totalAmount), 0)
+        FROM Order o
+        WHERE o.status = 'DONE'
+          AND o.createdAt >= :start
+          AND o.createdAt < :end
+        GROUP BY function('date', o.createdAt)
+        ORDER BY function('date', o.createdAt)
+    """)
+    List<Object[]> getDailyRevenue(
+            @Param("start") Instant start,
+            @Param("end") Instant end
+    );
+
+
+
+    // Sales by Category
+    @Query("""
+        SELECT p.category, COALESCE(SUM(oi.totalPrice), 0)
+        FROM Order o
+        JOIN o.items oi
+        JOIN oi.product p
+        WHERE o.status = 'DONE'
+            AND o.createdAt >= :start
+            AND o.createdAt < :end
+        GROUP BY p.category
+        ORDER BY COALESCE(SUM(oi.totalPrice), 0) DESC
+    """)
+    List<Object[]> getSalesByCategory(@Param("start") Instant start, @Param("end") Instant end);
+
+
+
+
+
+    // Hourly Order Count per Weekday
+    @Query(value = """
+    SELECT
+        EXTRACT(DOW FROM o.created_at) AS dow,
+        EXTRACT(HOUR FROM o.created_at) AS hour,
+        COUNT(o.id) AS total
+    FROM orders o
+    WHERE o.status = 'DONE'
+      AND o.created_at >= :start
+      AND o.created_at < :end
+    GROUP BY
+        EXTRACT(DOW FROM o.created_at),
+        EXTRACT(HOUR FROM o.created_at)
+    ORDER BY
+        dow, hour
+    """, nativeQuery = true)
+    List<Object[]> getHourlyDistribution(
+            @Param("start") Instant start,
+            @Param("end") Instant end
+    );
+
+
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
