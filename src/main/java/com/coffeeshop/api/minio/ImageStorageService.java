@@ -1,6 +1,7 @@
 package com.coffeeshop.api.minio;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ImageStorageService {
 
     private final S3Client s3Client;
@@ -97,7 +99,19 @@ public class ImageStorageService {
 
     // Delete Image by Key
     public void delete(String key) {
-        s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+        if (key == null || key.isBlank()) {
+            return; // nothing to delete
+        }
+
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build());
+        } catch (Exception ex) {
+            // log only, do NOT throw
+            log.warn("Failed to delete S3 object: {}", key, ex);
+        }
     }
 
 
@@ -121,6 +135,10 @@ public class ImageStorageService {
     // For user image
     public String employeeFolder () {
         return "employees/";
+    }
+
+    public String shopProfileFolder () {
+        return "shop/profile/";
     }
 
 }

@@ -6,6 +6,9 @@ import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
+import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
+import com.coffeeshop.api.dto.adminDashboard.setting.GetShopProfile;
+import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
@@ -37,4 +40,10 @@ public interface AdminDashboardService {
     ReportDashboardResponse reports (Integer year, Integer month);
 
     GetAllStaffProfilesResponse.Staff editStaffDetail (UUID id, EditStaffRequest request, MultipartFile image);
+
+    GetShopProfile shopProfile ();
+
+    GetShopProfile updateShopProfile (UpdateShopProfileRequest request, MultipartFile image);
+
+    GetShopNameAndImage getShopNameAndImage ();
 }

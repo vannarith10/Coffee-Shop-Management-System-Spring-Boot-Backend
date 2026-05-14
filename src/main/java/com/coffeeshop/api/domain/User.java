@@ -63,4 +63,8 @@ public class User {
     private List<Schedule> schedules;
 
     private String imageKey;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shop_profile_id")
+    private ShopProfile shopProfile;
 }

@@ -8,6 +8,9 @@ import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
+import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
+import com.coffeeshop.api.dto.adminDashboard.setting.GetShopProfile;
+import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
@@ -193,6 +196,31 @@ public class AdminDashboardController {
             @RequestPart(required = false) MultipartFile image
             ) {
         return ResponseEntity.ok(adminDashboardService.editStaffDetail(id, request, image));
+    }
+
+
+
+    @GetMapping("/shop-profile")
+    public ResponseEntity<GetShopProfile> shopProfile () {
+        return ResponseEntity.ok(adminDashboardService.shopProfile());
+    }
+
+
+
+
+    @PatchMapping(value = "/update-profile", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GetShopProfile> updateShopProfile (
+            @RequestPart(required = false) @Valid UpdateShopProfileRequest request,
+            @RequestPart(required = false) MultipartFile image
+            ) {
+        return ResponseEntity.ok(adminDashboardService.updateShopProfile(request, image));
+    }
+
+
+
+    @GetMapping("/shop-name/shop-image")
+    public ResponseEntity<GetShopNameAndImage> getShopNameAndImage () {
+        return ResponseEntity.ok(adminDashboardService.getShopNameAndImage());
     }
 
 

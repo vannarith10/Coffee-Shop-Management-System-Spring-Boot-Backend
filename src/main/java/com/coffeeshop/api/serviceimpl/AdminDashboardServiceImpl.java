@@ -2,6 +2,7 @@ package com.coffeeshop.api.serviceimpl;
 
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
+import com.coffeeshop.api.domain.ShopProfile;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.OrderStatus;
@@ -12,6 +13,9 @@ import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
+import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
+import com.coffeeshop.api.dto.adminDashboard.setting.GetShopProfile;
+import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
@@ -23,6 +27,7 @@ import com.coffeeshop.api.service.UserService;
 import com.coffeeshop.api.util.DateWindows;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,9 +41,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
@@ -54,6 +61,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
     private final CategoryRepository categoryRepository;
+    private final ShopProfileRepository shopProfileRepository;
 
 
     // ====================================
@@ -927,7 +935,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             } catch (Exception ex) {
                 throw new ResponseStatusException(
                         HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Error processing image", ex
+                        "Error processing image ", ex
                 );
             }
         }
@@ -952,6 +960,130 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
 
+    // =================
+    // GET SHOP PROFILE
+    // =================
+    @Override
+    public GetShopProfile shopProfile() {
+        findUserAndValidateAdminRole();
+        User admin = userRepository.findById(userService.getCurrentUserId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "User not found.")
+        );
+        ShopProfile profile = admin.getShopProfile();
+        return GetShopProfile.builder()
+                .name(profile.getName())
+                .contact(profile.getContactNumber())
+                .address(profile.getAddress())
+                .description(profile.getDescription())
+                .imageUrl(imageStorageService.getImageUrl(profile.getImageKey()))
+                .region(profile.getRegion())
+                .build();
+    }
+
+
+
+
+
+    // ====================
+    // UPDATE SHOP PROFILE
+    // ====================
+    @Transactional
+    @Override
+    public GetShopProfile updateShopProfile(UpdateShopProfileRequest request, MultipartFile image) {
+        User user = getUserAndValidateAdminRole();
+        ShopProfile profile = user.getShopProfile();
+        // If no field provided
+        boolean noField = request == null ||
+                Stream.of(
+                        request.name(),
+                        request.contact(),
+                        request.address(),
+                        request.description(),
+                        request.region()
+                ).allMatch(v -> v == null || v.isBlank());
+
+        if (noField && (image == null || image.isEmpty())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Need at least one field provided.");
+        }
+
+        if (request != null){
+            // name
+            if (request.name() != null && !request.name().isBlank()) {
+                profile.setName(request.name().trim());
+            }
+
+            // contact
+            if (request.contact() != null && !request.contact().isBlank()) {
+                profile.setContactNumber(request.contact().trim());
+            }
+
+            // address
+            if (request.address() != null && !request.address().isBlank()) {
+                profile.setAddress(request.address().trim());
+            }
+
+            // description
+            if (request.description() != null && !request.description().isBlank()) {
+                profile.setDescription(request.description().trim());
+            }
+
+            // region
+            if (request.region() != null && !request.region().isBlank()) {
+                profile.setRegion(request.region().trim());
+            }
+        }
+
+        // image
+        if (image != null && !image.isEmpty()){
+            String oldImageKey = profile.getImageKey();
+            String newImageKey;
+            String folder = imageStorageService.shopProfileFolder();
+            try{
+                newImageKey = imageStorageService.upload(image, folder);
+                profile.setImageKey(newImageKey);
+                if (oldImageKey != null) {
+                    try {
+                        imageStorageService.delete(oldImageKey);
+                    } catch (Exception e) {
+                        log.warn("Failed to delete image: {}", oldImageKey, e);
+                    }
+                }
+            } catch (Exception ex) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Error processing image. ", ex);
+            }
+        }
+
+        return GetShopProfile.builder()
+                .name(profile.getName())
+                .contact(profile.getContactNumber())
+                .address(profile.getAddress())
+                .description(profile.getDescription())
+                .imageUrl(imageStorageService.getImageUrl(profile.getImageKey()))
+                .region(profile.getRegion())
+                .build();
+    }
+
+
+
+
+
+    @Override
+    public GetShopNameAndImage getShopNameAndImage() {
+        Optional<ShopProfile> profile = shopProfileRepository.findFirstByOrderByIdAsc();
+        ShopProfile pro = profile.orElse(null);
+
+        return GetShopNameAndImage.builder()
+                .name(pro != null && pro.getName() != null ? pro.getName() : "COFFEE")
+                .imageUrl(imageStorageService.getImageUrl(pro.getImageKey()))
+                .build();
+    }
+
+
+
+
 
     // Helper - Validate Admin Role
     private void findUserAndValidateAdminRole () {
@@ -961,6 +1093,16 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         if (user.getRole() != Role.ADMIN) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resource.");
         }
+    }
+    // I want to return User value
+    private User getUserAndValidateAdminRole () {
+        User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")
+        );
+        if (user.getRole() != Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resource.");
+        }
+        return user;
     }
 }
 

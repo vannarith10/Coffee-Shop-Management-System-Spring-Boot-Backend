@@ -127,6 +127,7 @@ public final class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (path == null) return true;
 
         return path.startsWith("/api/v1/product/user-menu")
+                || path.startsWith("/api/v1/admin-dashboard/shop-name/shop-image")
                 || path.startsWith("/api/v1/auth/")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")

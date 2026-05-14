@@ -1,10 +1,12 @@
 package com.coffeeshop.api.util;
 
+import com.coffeeshop.api.domain.ShopProfile;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.domain.enums.Schedule;
 import com.coffeeshop.api.domain.enums.ShiftType;
 import com.coffeeshop.api.domain.enums.Status;
+import com.coffeeshop.api.repository.ShopProfileRepository;
 import com.coffeeshop.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
@@ -22,6 +24,7 @@ class DefaultUserInitializer implements ApplicationRunner {
 
     private final UserRepository userRepo;
     private final PasswordEncoder encoder;
+    private final ShopProfileRepository shopProfileRepository;
 
 
     // Creating users
@@ -69,6 +72,9 @@ class DefaultUserInitializer implements ApplicationRunner {
                 ShiftType.FULL_DAY,
                 List.of(Schedule.MONDAY, Schedule.TUESDAY, Schedule.WEDNESDAY, Schedule.FRIDAY, Schedule.SATURDAY, Schedule.SUNDAY)
         );
+
+        // Add Shop Profile
+        addShopProfileToAdminIfNull();
     }
 
     // Function to create default User
@@ -94,6 +100,40 @@ class DefaultUserInitializer implements ApplicationRunner {
                 .build();
 
         userRepo.save(user);
+    }
+
+    // Shop Profile
+    private void addShopProfileToAdminIfNull() {
+
+        // 1. Create or get existing shop profile
+        ShopProfile profile = shopProfileRepository.findFirstByOrderByIdAsc()
+                .orElseGet(() -> {
+                    ShopProfile newProfile = ShopProfile.builder()
+                            .name("RUPP COFFEE")
+                            .contactNumber("010 369 2026")
+                            .address("Russian Federation Blvd (110), Phnom Penh 120404")
+                            .description("A modern coffee shop in Phnom Penh serving premium coffee, handcrafted drinks, and fresh pastries in a comfortable and welcoming atmosphere.")
+                            .region("Asia/Phnom_Penh")
+                            .build();
+
+                    return shopProfileRepository.save(newProfile);
+                });
+
+        // 2. Find all admins
+        List<User> admins = userRepo.findAllByRole(Role.ADMIN);
+
+        // 3. Assign shop profile to admins if missing
+        List<User> updatedAdmins = admins.stream()
+                .filter(user -> user.getShopProfile() == null)
+                .peek(user -> {
+                    user.setShopProfile(profile);
+                    user.setUpdatedAt(Instant.now());
+                })
+                .toList();
+
+        if (!updatedAdmins.isEmpty()) {
+            userRepo.saveAll(updatedAdmins);
+        }
     }
 
 }
