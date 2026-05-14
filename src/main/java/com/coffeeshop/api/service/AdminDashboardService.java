@@ -8,6 +8,7 @@ import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +24,7 @@ public interface AdminDashboardService {
 
     GetAllStaffProfilesResponse getAllStaffProfiles (int page, int size);
 
-    AddNewEmployeeResponse addNewEmployee (AddNewEmployeeRequest request);
+    AddNewEmployeeResponse addNewEmployee (AddNewEmployeeRequest request, MultipartFile image);
 
     GetAllProductsResponse getProducts (int page, int size);
 
@@ -34,4 +35,6 @@ public interface AdminDashboardService {
     GetAllProductsResponse.ProductItem addProduct (AddProductRequest request, MultipartFile image);
 
     ReportDashboardResponse reports (Integer year, Integer month);
+
+    GetAllStaffProfilesResponse.Staff editStaffDetail (UUID id, EditStaffRequest request, MultipartFile image);
 }

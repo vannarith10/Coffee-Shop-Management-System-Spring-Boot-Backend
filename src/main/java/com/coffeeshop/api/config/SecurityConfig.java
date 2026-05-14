@@ -130,6 +130,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/admin-dashboard/product/{id}/patch-product").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin-dashboard/add-product").hasRole(Role.ADMIN.toString())
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin-dashboard/reports").hasRole(Role.ADMIN.toString())
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/admin-dashboard/edit/{id}/staff").hasRole(Role.ADMIN.toString())
 
 
                         // ====================

@@ -64,7 +64,7 @@ public class ImageStorageService {
                         .build(),
                 RequestBody.fromBytes(file.getBytes())
         );
-        return key; // Save this in your DB if you need to reference the file later
+        return key;
     }
 
 
@@ -95,9 +95,8 @@ public class ImageStorageService {
 
 
 
-    // Delete File
+    // Delete Image by Key
     public void delete(String key) {
-        // Deletes the object by key
         s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
     }
 
@@ -108,7 +107,7 @@ public class ImageStorageService {
         String slug = slugify(categoryName);
         if (slug.isBlank()) slug = "uncategorized";
         return "products/" + slug;
-    }
+    } // Final return must be "products/..." or "products/uncategorized"
 
     // Simple slugifier for folders
     public String slugify(String input) {
@@ -117,6 +116,11 @@ public class ImageStorageService {
         s = s.replaceAll("[^a-z0-9]+", "-");
         s = s.replaceAll("(^-+)|(-+$)", "");
         return s;
+    }
+
+    // For user image
+    public String employeeFolder () {
+        return "employees/";
     }
 
 }

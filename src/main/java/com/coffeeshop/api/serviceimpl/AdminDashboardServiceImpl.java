@@ -14,6 +14,7 @@ import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.*;
@@ -298,7 +299,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                             .email("")
                             .phoneNumber("")
                             .status(userStaff.getStatus())
-                            .imageUrl("")
+                            .imageUrl(imageStorageService.getImageUrl(userStaff.getImageKey()))
                         .build()).toList();
         return GetAllStaffProfilesResponse.builder()
                 .message("Get all staff profiles information")
@@ -316,7 +317,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     // =================
     @Transactional
     @Override
-    public AddNewEmployeeResponse addNewEmployee(AddNewEmployeeRequest request) {
+    public AddNewEmployeeResponse addNewEmployee(AddNewEmployeeRequest request, MultipartFile image) {
         // Get user
         User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -326,15 +327,61 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         }
 
         // INPUT VALIDATION
+        //
+        // Full name
+        if (request.fullName() == null || request.fullName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Full name is required.");
+        }
+        // Username
+        if (request.username() == null || request.username().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required.");
+        }
+        // Password
+        if (request.password() == null || request.password().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required.");
+        }
+        // Role
+        if (request.role() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role is required.");
+        }
+        // Shift
+        if (request.shift() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Shift is required.");
+        }
+        // Schedules
+        if (request.schedules() == null || request.schedules().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Working days must not be empty.");
+        }
+        // Status
+        if (request.status() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status is required.");
+        }
+
         // validate username, must be unique
         if (userRepository.existsByUsername(request.username().trim())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username is already taken.");
         }
 
         // validate password
-        if (!request.password().trim().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$")) {
+        if (!request.password().trim().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Weak password");
             // Allow EX: Password@1, Admin@123, Secure!9A
+        }
+
+        String imageKey = null;
+        if(image != null && !image.isEmpty()){
+            imageStorageService.ensureBucketExists();
+
+            String folder = imageStorageService.employeeFolder();
+            try {
+                imageKey = imageStorageService.upload(image, folder);
+            }catch(Exception ex){
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to upload image to storage",
+                        ex
+                );
+            }
         }
 
         User newUser = User.builder()
@@ -347,6 +394,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant())
                 .shiftType(request.shift())
                 .schedules(request.schedules())
+                .imageKey(imageKey)
                 .build();
         User saved = userRepository.save(newUser);
 
@@ -360,7 +408,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .email("")
                 .phoneNumber("")
                 .status(saved.getStatus())
-                .imageUrl("")
+                .imageUrl(imageStorageService.getImageUrl(saved.getImageKey()))
                 .build();
     }
 
@@ -574,7 +622,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         String imageKey = null;
         if(image != null && !image.isEmpty()){
             imageStorageService.ensureBucketExists();
-
             String folder = imageStorageService.buildFolder(category.getName());
             try {
                 imageKey = imageStorageService.upload(image, folder);
@@ -776,11 +823,131 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             }
             result.add(dayList);
         }
-
         return result;
     }
 
 
+
+
+
+    // EDIT EMPLOYEE DETAILS
+    @Transactional
+    @Override
+    public GetAllStaffProfilesResponse.Staff editStaffDetail(UUID id, EditStaffRequest request, MultipartFile image) {
+        findUserAndValidateAdminRole();
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found."
+                )
+        );
+        // Update at least one provided field
+        boolean noFields = request == null || (
+                request.name() == null &&
+                        request.username() == null &&
+                        request.password() == null &&
+                        request.role() == null &&
+                        request.status() == null &&
+                        request.shiftType() == null &&
+                        request.isActive() == null &&
+                        (request.schedules() == null || request.schedules().isEmpty())
+        );
+
+        if (noFields && (image == null || image.isEmpty())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "At least one field must be provided.");
+        }
+
+        // name
+        if (request.name() != null && !request.name().isBlank()) {
+            user.setName(request.name().trim());
+        }
+
+        // username
+        if (request.username() != null && !request.username().isBlank()) {
+            String newUsername = request.username().trim().toLowerCase();
+
+            if (!newUsername.equals(user.getUsername()) &&
+                    userRepository.existsByUsername(newUsername)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists.");
+            }
+            user.setUsername(newUsername);
+        }
+
+
+        // password
+        if (request.password() != null && !request.password().isBlank()) {
+            if (!request.password().trim().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Weak password");
+                // Allow EX: Vannarith#15
+            }
+            user.setPassword(passwordEncoder.encode(request.password().trim()));
+        }
+
+        // role
+        if (request.role() != null) {
+            user.setRole(request.role());
+        }
+
+        // is active
+        if (request.isActive() != null) {
+            user.setActive(request.isActive());
+        }
+
+
+        // status
+        if (request.status() != null) {
+            user.setStatus(request.status());
+        }
+
+        // shift type
+        if (request.shiftType() != null) {
+            user.setShiftType(request.shiftType());
+        }
+
+        // schedules
+        if (request.schedules() != null && !request.schedules().isEmpty()){
+            user.setSchedules(request.schedules());
+        }
+
+
+
+        // New image ?
+        String oldImageKey = user.getImageKey();
+        String imageKey;
+        if (image != null && !image.isEmpty()) {
+            imageStorageService.ensureBucketExists();
+            String folder = imageStorageService.employeeFolder();
+            try {
+                imageKey = imageStorageService.upload(image, folder);
+                user.setImageKey(imageKey);
+                if (oldImageKey != null) {
+                    imageStorageService.delete(oldImageKey);
+                }
+            } catch (Exception ex) {
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Error processing image", ex
+                );
+            }
+        }
+
+        User saved = userRepository.save(user);
+
+
+        return GetAllStaffProfilesResponse.Staff.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .username(saved.getUsername())
+                .role(saved.getRole())
+                .shift(saved.getShiftType())
+                .schedules(saved.getSchedules())
+                .email("")
+                .phoneNumber("")
+                .status(saved.getStatus())
+                .imageUrl(imageStorageService.getImageUrl(saved.getImageKey()))
+                .build();
+    }
 
 
 
@@ -795,7 +962,6 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only ADMIN can access this resource.");
         }
     }
-
 }
 
 

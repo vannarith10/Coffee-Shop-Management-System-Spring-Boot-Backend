@@ -61,4 +61,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "schedule_day", nullable = false, length = 10)
     private List<Schedule> schedules;
+
+    private String imageKey;
 }

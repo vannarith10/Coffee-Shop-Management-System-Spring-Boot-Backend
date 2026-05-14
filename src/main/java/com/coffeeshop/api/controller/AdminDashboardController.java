@@ -2,8 +2,7 @@ package com.coffeeshop.api.controller;
 
 
 import com.coffeeshop.api.domain.User;
-import com.coffeeshop.api.domain.enums.ProductStock;
-import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.domain.enums.*;
 import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
@@ -11,6 +10,7 @@ import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.AdminDashboardService;
@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -90,12 +91,12 @@ public class AdminDashboardController {
 
 
 
-    @PostMapping("/create-employee-account")
+    @PostMapping(value = "/create-employee-account", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AddNewEmployeeResponse> addNewEmployee (
-            @Valid @RequestBody
-            AddNewEmployeeRequest request
+            @RequestPart("data") AddNewEmployeeRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) {
-        AddNewEmployeeResponse response = adminDashboardService.addNewEmployee(request);
+        AddNewEmployeeResponse response = adminDashboardService.addNewEmployee(request, image);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -180,6 +181,18 @@ public class AdminDashboardController {
     ) {
         ReportDashboardResponse response = adminDashboardService.reports(year, month);
         return ResponseEntity.ok(response);
+    }
+
+
+
+
+    @PatchMapping(value = "/edit/{id}/staff", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GetAllStaffProfilesResponse.Staff> editStaff (
+            @PathVariable UUID id,
+            @RequestPart(required = false) @Valid EditStaffRequest request,
+            @RequestPart(required = false) MultipartFile image
+            ) {
+        return ResponseEntity.ok(adminDashboardService.editStaffDetail(id, request, image));
     }
 
 
