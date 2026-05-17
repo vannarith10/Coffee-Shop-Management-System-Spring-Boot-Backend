@@ -8,8 +8,9 @@ import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.*;
-import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
+import com.coffeeshop.api.dto.adminDashboard.product.AddNewProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
+import com.coffeeshop.api.dto.adminDashboard.product.ProductStockStatusResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
@@ -18,7 +19,7 @@ import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
-import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.GetAllEmployeeProfilesResponse;
 import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.*;
 import com.coffeeshop.api.service.oldService.AdminDashboardService;
@@ -268,10 +269,10 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
     // ===========================
-    // Get All Staff Profiles Info
+    // Get All Employee Profiles Info
     // ===========================
     @Override
-    public GetAllStaffProfilesResponse getAllStaffProfiles(int page, int size) {
+    public GetAllEmployeeProfilesResponse getAllStaffProfiles(int page, int size) {
         // Get user
         User user = userRepository.findById(userService.getCurrentUserId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
         // Validate Role
@@ -285,7 +286,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         // Get Paginated of Users
         Page<User> userPage = userRepository.findAll(pageable);
         // Build Pagination response
-        GetAllStaffProfilesResponse.Pagination pagination = GetAllStaffProfilesResponse.Pagination.builder()
+        GetAllEmployeeProfilesResponse.Pagination pagination = GetAllEmployeeProfilesResponse.Pagination.builder()
                 .page(getPage + 1)
                 .size(getSize)
                 .totalPages(userPage.getTotalPages())
@@ -293,10 +294,10 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .build();
 
         // Build List of Staffs
-        List<GetAllStaffProfilesResponse.Staff> staffList = userPage
+        List<GetAllEmployeeProfilesResponse.Employee> staffList = userPage
                 .getContent()
                 .stream()
-                .map(userStaff -> GetAllStaffProfilesResponse.Staff.builder()
+                .map(userStaff -> GetAllEmployeeProfilesResponse.Employee.builder()
                             .id(userStaff.getId())
                             .name(userStaff.getName())
                             .username(userStaff.getUsername())
@@ -308,7 +309,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                             .status(userStaff.getStatus())
                             .imageUrl(imageStorageService.getImageUrl(userStaff.getImageKey()))
                         .build()).toList();
-        return GetAllStaffProfilesResponse.builder()
+        return GetAllEmployeeProfilesResponse.builder()
                 .message("Get all staff profiles information")
                 .pagination(pagination)
                 .staffs(staffList)
@@ -573,7 +574,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     // ====================
     @Transactional
     @Override
-    public GetAllProductsResponse.ProductItem addProduct(AddProductRequest request, MultipartFile image) {
+    public GetAllProductsResponse.ProductItem addProduct(AddNewProductRequest request, MultipartFile image) {
         findUserAndValidateAdminRole();
 
         String name;
@@ -840,7 +841,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     // EDIT EMPLOYEE DETAILS
     @Transactional
     @Override
-    public GetAllStaffProfilesResponse.Staff editStaffDetail(UUID id, EditStaffRequest request, MultipartFile image) {
+    public GetAllEmployeeProfilesResponse.Employee editStaffDetail(UUID id, EditStaffRequest request, MultipartFile image) {
         findUserAndValidateAdminRole();
         User user = userRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(
@@ -942,7 +943,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
         User saved = userRepository.save(user);
 
 
-        return GetAllStaffProfilesResponse.Staff.builder()
+        return GetAllEmployeeProfilesResponse.Employee.builder()
                 .id(saved.getId())
                 .name(saved.getName())
                 .username(saved.getUsername())

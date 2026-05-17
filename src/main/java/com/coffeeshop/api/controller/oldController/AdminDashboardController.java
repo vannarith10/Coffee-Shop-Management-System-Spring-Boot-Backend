@@ -1,11 +1,12 @@
-package com.coffeeshop.api.controller;
+package com.coffeeshop.api.controller.oldController;
 
 
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.*;
 import com.coffeeshop.api.dto.adminDashboard.*;
-import com.coffeeshop.api.dto.adminDashboard.product.AddProductRequest;
+import com.coffeeshop.api.dto.adminDashboard.product.AddNewProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
+import com.coffeeshop.api.dto.adminDashboard.product.ProductStockStatusResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.UpdateProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.report.ReportDashboardResponse;
 import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
@@ -14,7 +15,7 @@ import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
-import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
+import com.coffeeshop.api.dto.adminDashboard.staff.GetAllEmployeeProfilesResponse;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.service.oldService.AdminDashboardService;
 import com.coffeeshop.api.service.oldService.UserService;
@@ -79,15 +80,15 @@ public class AdminDashboardController {
 
 
 
-    // Get All Staff Profiles Info
+    // Get All Employee Profiles Info
     @GetMapping("/staff-profiles")
-    public ResponseEntity<GetAllStaffProfilesResponse> getStaffProfiles (
+    public ResponseEntity<GetAllEmployeeProfilesResponse> getStaffProfiles (
             @RequestParam(defaultValue = "1")
             int page,
             @RequestParam(defaultValue = "10")
             int size
     ) {
-        GetAllStaffProfilesResponse response = adminDashboardService.getAllStaffProfiles(page, size);
+        GetAllEmployeeProfilesResponse response = adminDashboardService.getAllStaffProfiles(page, size);
         return ResponseEntity.ok(response);
     }
 
@@ -161,7 +162,7 @@ public class AdminDashboardController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "image", required = false) MultipartFile image
     ) {
-        AddProductRequest request = AddProductRequest.builder()
+        AddNewProductRequest request = AddNewProductRequest.builder()
                 .name(name)
                 .sellingPrice(price)
                 .costPrice(cost)
@@ -189,7 +190,7 @@ public class AdminDashboardController {
 
 
     @PatchMapping(value = "/edit/{id}/staff", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<GetAllStaffProfilesResponse.Staff> editStaff (
+    public ResponseEntity<GetAllEmployeeProfilesResponse.Employee> editStaff (
             @PathVariable UUID id,
             @RequestPart(required = false) @Valid EditStaffRequest request,
             @RequestPart(required = false) MultipartFile image

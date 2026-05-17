@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Builder
-public record GetAllStaffProfilesResponse(
+public record GetAllEmployeeProfilesResponse(
 
         @JsonProperty("message")
         String message,
@@ -20,11 +20,11 @@ public record GetAllStaffProfilesResponse(
         Pagination pagination,
 
         @JsonProperty("staffs")
-        List<Staff> staffs
+        List<Employee> staffs
 ) {
 
     @Builder
-    public record Staff (
+    public record Employee(
             @JsonProperty("id")
             UUID id,
 

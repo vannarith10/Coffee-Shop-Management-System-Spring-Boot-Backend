@@ -1,4 +1,4 @@
-package com.coffeeshop.api.dto.adminDashboard;
+package com.coffeeshop.api.dto.adminDashboard.product;
 
 import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.ProductStock;
@@ -19,6 +19,8 @@ public record ProductStockStatusResponse(
         @JsonProperty("products")
         List<ProductItem> products
 ) {
+
+
     @Builder
     public record ProductItem (
             @JsonProperty("id")
@@ -36,6 +38,8 @@ public record ProductStockStatusResponse(
             @JsonProperty("status")
             ProductStock status
     ){}
+
+
 
     @Builder
     public record Pagination (

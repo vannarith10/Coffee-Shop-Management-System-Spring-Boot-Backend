@@ -6,7 +6,7 @@ import lombok.Builder;
 import java.math.BigDecimal;
 
 @Builder
-public record AddProductRequest(
+public record AddNewProductRequest(
 
         @JsonProperty("name")
         String name,

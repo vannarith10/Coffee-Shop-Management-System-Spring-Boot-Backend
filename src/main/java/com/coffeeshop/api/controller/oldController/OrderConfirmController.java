@@ -1,4 +1,4 @@
-package com.coffeeshop.api.controller;
+package com.coffeeshop.api.controller.oldController;
 
 import com.coffeeshop.api.domain.Order;
 import com.coffeeshop.api.service.oldService.OrderService;

@@ -12,6 +12,7 @@ import java.util.UUID;
 
 @Builder
 public record AddNewEmployeeResponse(
+
         @JsonProperty("id")
         UUID id,
 
