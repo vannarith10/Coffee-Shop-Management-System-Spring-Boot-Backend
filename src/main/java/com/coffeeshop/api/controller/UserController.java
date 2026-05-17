@@ -5,7 +5,7 @@ import com.coffeeshop.api.dto.DisableUserRequest;
 import com.coffeeshop.api.dto.DisableUserResponse;
 import com.coffeeshop.api.dto.EnableUserRequest;
 import com.coffeeshop.api.dto.auth.NewPasswordRequest;
-import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.service.oldService.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

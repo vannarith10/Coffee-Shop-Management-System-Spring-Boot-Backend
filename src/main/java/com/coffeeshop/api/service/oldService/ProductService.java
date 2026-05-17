@@ -1,4 +1,4 @@
-package com.coffeeshop.api.service;
+package com.coffeeshop.api.service.oldService;
 
 import com.coffeeshop.api.dto.product.*;
 import org.springframework.data.domain.Page;

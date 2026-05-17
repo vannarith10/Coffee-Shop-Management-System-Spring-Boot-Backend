@@ -9,7 +9,7 @@ import com.coffeeshop.api.dto.auth.*;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.security.CustomUserDetails;
-import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.service.oldService.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -28,7 +28,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;

@@ -1,7 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.discount.DiscountRequest;
-import com.coffeeshop.api.service.DiscountService;
+import com.coffeeshop.api.service.oldService.DiscountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

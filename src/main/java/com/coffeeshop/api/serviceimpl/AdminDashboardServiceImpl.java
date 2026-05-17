@@ -4,7 +4,6 @@ import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
 import com.coffeeshop.api.domain.ShopProfile;
 import com.coffeeshop.api.domain.User;
-import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.domain.enums.Role;
@@ -22,8 +21,8 @@ import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.*;
-import com.coffeeshop.api.service.AdminDashboardService;
-import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.service.oldService.AdminDashboardService;
+import com.coffeeshop.api.service.oldService.UserService;
 import com.coffeeshop.api.util.DateWindows;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -71,7 +70,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
     public BusinessAnalyticsSummaryResponse businessAnalyticsSummary() {
 
         // The first time of creating this method is for only ADMIN role, but now
-        // I moved validate user role to the Controller place because this function call be called to use at Barista Update Status that has BARISTA role
+        // I moved validate user role to the Controller place because this function can be called to use at Barista Update Status that has BARISTA role
         // Because Update Order Status handles real-time sending new Business Analytics Summary values
         // that it needs this function to calculate the values and unchanged return type
 

@@ -2,16 +2,13 @@ package com.coffeeshop.api.serviceimpl;
 
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
-import com.coffeeshop.api.domain.ShopSetting;
 import com.coffeeshop.api.domain.User;
-import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.product.*;
 import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.*;
-import com.coffeeshop.api.service.ProductService;
-import com.coffeeshop.api.service.UserService;
-import com.coffeeshop.api.util.TimeRangeUtil;
+import com.coffeeshop.api.service.oldService.ProductService;
+import com.coffeeshop.api.service.oldService.UserService;
 import com.coffeeshop.api.websocket.ProductEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

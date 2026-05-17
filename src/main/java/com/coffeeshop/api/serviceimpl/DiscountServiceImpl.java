@@ -3,7 +3,7 @@ package com.coffeeshop.api.serviceimpl;
 import com.coffeeshop.api.domain.Product;
 import com.coffeeshop.api.dto.discount.DiscountRequest;
 import com.coffeeshop.api.repository.ProductRepository;
-import com.coffeeshop.api.service.DiscountService;
+import com.coffeeshop.api.service.oldService.DiscountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

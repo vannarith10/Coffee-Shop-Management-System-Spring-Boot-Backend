@@ -1,4 +1,4 @@
-package com.coffeeshop.api.service;
+package com.coffeeshop.api.service.oldService;
 
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.dto.category.CategoryResponse;

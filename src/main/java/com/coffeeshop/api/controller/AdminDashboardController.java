@@ -16,8 +16,8 @@ import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllStaffProfilesResponse;
 import com.coffeeshop.api.repository.UserRepository;
-import com.coffeeshop.api.service.AdminDashboardService;
-import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.service.oldService.AdminDashboardService;
+import com.coffeeshop.api.service.oldService.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 @RestController

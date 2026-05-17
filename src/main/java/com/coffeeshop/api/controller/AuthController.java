@@ -4,7 +4,7 @@ import com.coffeeshop.api.dto.auth.LoginRequest;
 import com.coffeeshop.api.dto.auth.LoginResponse;
 import com.coffeeshop.api.dto.auth.RegisterRequest;
 import com.coffeeshop.api.dto.auth.RegisterResponse;
-import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.service.oldService.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

@@ -1,7 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.product.*;
-import com.coffeeshop.api.service.ProductService;
+import com.coffeeshop.api.service.oldService.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 //import org.hibernate.query.Page;

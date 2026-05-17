@@ -1,7 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.domain.Order;
-import com.coffeeshop.api.service.OrderService;
+import com.coffeeshop.api.service.oldService.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;

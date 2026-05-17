@@ -1,7 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.order.*;
-import com.coffeeshop.api.service.OrderService;
+import com.coffeeshop.api.service.oldService.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

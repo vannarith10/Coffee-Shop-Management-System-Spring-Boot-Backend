@@ -1,6 +1,6 @@
 package com.coffeeshop.api.controller;
 
-import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.service.oldService.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

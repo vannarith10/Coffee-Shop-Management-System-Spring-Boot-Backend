@@ -1,7 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.AccessTokenResponse;
-import com.coffeeshop.api.service.AuthTokenService;
+import com.coffeeshop.api.service.oldService.AuthTokenService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
