@@ -13,6 +13,6 @@ public interface UserManagementService {
     // Get All Disabled Users
 
 
-    // : I don't need to do this, because in Edit Employee I almost have all of these.
+    // : I don't need to do this, because in Edit Employee I almost have all of these features.
 
 }

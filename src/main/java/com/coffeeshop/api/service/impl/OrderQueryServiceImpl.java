@@ -4,7 +4,6 @@ import com.coffeeshop.api.domain.Order;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.dto.order.OrderMessageToBarista;
 import com.coffeeshop.api.mapper.OrderMapper;
-import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.OrderRepository;
 import com.coffeeshop.api.service.OrderQueryService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +37,5 @@ public class OrderQueryServiceImpl implements OrderQueryService {
                 .map(orderMapper::toOrderMessageResponseDto)
                 .toList();
     }
-
 
 }
