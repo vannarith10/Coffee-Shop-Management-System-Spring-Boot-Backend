@@ -43,7 +43,7 @@ public class Order {
     private BigDecimal totalAmount;       // final amount
 
     @Enumerated(EnumType.STRING)
-    private PaymentMethod paymentMethod; // CAST, ABA_PAYWAY
+    private PaymentMethod paymentMethod; // CAST, QR
 
     private Instant createdAt;
     private Instant confirmedAt;              // Complete payment & send to barista

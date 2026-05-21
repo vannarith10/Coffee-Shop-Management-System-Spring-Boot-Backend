@@ -14,6 +14,8 @@ public record TopSellingProductResponse(
         @JsonProperty("top_products")
         List<TopProductItem> topProducts
 ) {
+
+    @Builder
     public record TopProductItem(
             @JsonProperty("product_id")
             UUID productId,

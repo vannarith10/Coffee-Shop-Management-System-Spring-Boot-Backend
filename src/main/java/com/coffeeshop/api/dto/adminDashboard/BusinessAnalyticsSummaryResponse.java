@@ -7,6 +7,9 @@ import lombok.Builder;
 public record BusinessAnalyticsSummaryResponse(
         Summary summary
 ) {
+
+
+    @Builder
     public record Summary (
             @JsonProperty("today_revenue")
             MetricResponse todayRevenue,
@@ -18,6 +21,8 @@ public record BusinessAnalyticsSummaryResponse(
             MetricResponse todayAverageOrderValue
     ) {}
 
+
+    @Builder
     public record MetricResponse (
             @JsonProperty("value")
             double value,

@@ -9,30 +9,39 @@ import java.util.UUID;
 
 @Builder
 public record OrderMessageToBarista(
+
         @JsonProperty("order_id")
         UUID orderId,
 
         @JsonProperty("order_number")
         String orderNumber,
 
+        @JsonProperty("status")
         String status, // PENDING, PREPARING, DONE
 
+        @JsonProperty("note")
         String note,
 
         @JsonProperty("create_at")
         Instant createdAt,
 
+        @JsonProperty("items")
         List<Item> items
 ) {
+
+
+    @Builder
     public record Item(
             @JsonProperty("item_id")
             UUID itemId,
 
+            @JsonProperty("name")
             String name,
 
             @JsonProperty("image_url")
             String imageUrl,
 
+            @JsonProperty("quantity")
             int quantity
     ){}
 }

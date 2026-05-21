@@ -6,7 +6,8 @@ import java.math.RoundingMode;
 public class MoneyHelper {
     private MoneyHelper () {}
 
-    public static BigDecimal nvl (BigDecimal v) {
+    // Return v if not null, otherwise 0
+    public static BigDecimal nullToZero (BigDecimal v) {
         return v != null ? v : BigDecimal.ZERO;
     }
 
