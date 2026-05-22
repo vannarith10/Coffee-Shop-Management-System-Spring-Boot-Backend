@@ -21,13 +21,14 @@ public class AnalyticsController {
 
 
 
+    // ANALYTICS SUMMARY
     @GetMapping("/summary")
     public ResponseEntity<BusinessAnalyticsSummaryResponse> summary () {
         return ResponseEntity.ok(analyticsService.businessAnalyticsSummary());
     }
 
 
-
+    // TOP SELLING PRODUCT
     @PostMapping("/top-selling-products")
     public ResponseEntity<TopSellingProductResponse> topSelling (
             @Valid
