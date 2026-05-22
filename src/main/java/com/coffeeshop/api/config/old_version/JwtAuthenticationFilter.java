@@ -1,6 +1,7 @@
 
-package com.coffeeshop.api.config;
+package com.coffeeshop.api.config.old_version;
 
+import com.coffeeshop.api.config.JwtService;
 import com.coffeeshop.api.security.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Set;
 
 
 @Component

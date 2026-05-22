@@ -43,7 +43,7 @@ public class ShopProfileController {
 
 
 
-    // GET SHOP NAME AND LOGO
+    // GET SHOP NAME AND LOGO FOR ALL
     @GetMapping("/shop-name/shop-image")
     public ResponseEntity<GetShopNameAndImage> getShopNameAndImage () {
         return ResponseEntity.ok(shopProfileService.getShopNameAndImage());
