@@ -51,5 +51,4 @@ public class CashierOrderController {
 
     public record ConfirmResponse(String status, String message, UUID orderId, String orderStatus) {}
 
-
 }
