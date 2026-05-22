@@ -57,10 +57,10 @@ public class SecurityConfig {
 
                         // Public Menu & Shop Info
                         .requestMatchers(HttpMethod.GET, "/api/v2/shop-profile/shop-name/shop-image").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v2/product/user-menu").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v2/menu-query/user-menu").permitAll()
 
 
-                        // Websocker
+                        // Websocket
                         .requestMatchers("/ws/**").permitAll()
 
 

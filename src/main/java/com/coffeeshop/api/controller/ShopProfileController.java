@@ -35,15 +35,15 @@ public class ShopProfileController {
     @PatchMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GetShopProfile> updateProfile (
-            @RequestPart(required = false) @Valid UpdateShopProfileRequest request,
-            @RequestPart(required = false)MultipartFile image
+            @RequestPart(value = "data", required = false) @Valid UpdateShopProfileRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
             ) {
         return ResponseEntity.ok(shopProfileService.updateShopProfilePartially(request, image));
     }
 
 
 
-    // GET SHOP NAME AND LOGO FOR ALL
+    // GET SHOP NAME & LOGO FOR ALL
     @GetMapping("/shop-name/shop-image")
     public ResponseEntity<GetShopNameAndImage> getShopNameAndImage () {
         return ResponseEntity.ok(shopProfileService.getShopNameAndImage());
