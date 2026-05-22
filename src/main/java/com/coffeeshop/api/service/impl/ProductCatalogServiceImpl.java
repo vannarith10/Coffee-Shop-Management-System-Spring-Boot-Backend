@@ -39,7 +39,6 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
         return products.stream().map(this::toMenuItem).toList();
     }
 
-
     // Mapper
     private MenuItemsResponse toMenuItem(Product p) {
         return MenuItemsResponse.builder()
