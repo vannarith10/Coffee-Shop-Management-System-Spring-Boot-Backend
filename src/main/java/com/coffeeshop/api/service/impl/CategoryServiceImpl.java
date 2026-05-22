@@ -1,4 +1,4 @@
-package com.coffeeshop.api.serviceimpl;
+package com.coffeeshop.api.service.impl;
 
 
 import com.coffeeshop.api.domain.Category;
