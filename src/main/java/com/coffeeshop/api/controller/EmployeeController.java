@@ -2,7 +2,6 @@ package com.coffeeshop.api.controller;
 
 
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
-import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeResponse;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllEmployeeProfilesResponse;
 import com.coffeeshop.api.service.EmployeeService;

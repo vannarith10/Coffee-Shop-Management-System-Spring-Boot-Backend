@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/admin-dashboard")
+@RequestMapping("/api/v2/product")
 @PreAuthorize("hasRole('ADMIN')")
 public class ProductAdminController {
 
@@ -41,7 +41,7 @@ public class ProductAdminController {
 
 
     // GET STOCK STATUSES
-    @GetMapping("/products-statuses")
+    @GetMapping("/get-statuses")
     public ResponseEntity<ProductStockStatusResponse> stockStatus (
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
@@ -52,7 +52,7 @@ public class ProductAdminController {
 
 
     // UPDATE STOCK
-    @PostMapping("/product/{id}/stock-status")
+    @PostMapping("/update/{id}/stock-status")
     public void updateStockStatus (
             @PathVariable UUID id,
             @RequestParam ProductStock status
@@ -63,7 +63,7 @@ public class ProductAdminController {
 
 
     // ADD NEW PRODUCT
-    @PostMapping(value = "/add-product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/add-new", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllProductsResponse.ProductItem> addProduct (
             @RequestParam("name") @NotBlank String name,
             @RequestParam("price")BigDecimal price,
@@ -88,7 +88,7 @@ public class ProductAdminController {
 
 
     // PATCH PRODUCT
-    @PatchMapping(value = "/product/{id}/patch-product", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/{id}/patch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllProductsResponse.ProductItem> patchProduct (
             @PathVariable UUID id,
             @RequestPart("data") @Valid UpdateProductRequest request,

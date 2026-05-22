@@ -1,7 +1,6 @@
 package com.coffeeshop.api.config;
 
 import com.coffeeshop.api.security.CustomUserDetailsService;
-import io.swagger.v3.oas.models.PathItem;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -115,8 +114,7 @@ public final class JwtAuthFilter extends OncePerRequestFilter {
                 || path.startsWith("/api/v2/shop-profile/shop-name/shop-image")
                 || path.startsWith("/api/v1/auth/")
                 || path.startsWith("/api/v2/auth/")
-                || path.startsWith("/ws/")
-                || path.startsWith("/api/v1/test/");
+                || path.startsWith("/ws/");
     }
 
 

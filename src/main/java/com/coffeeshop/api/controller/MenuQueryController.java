@@ -15,15 +15,15 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/product")
-public class PublicMenuContoller {
+@RequestMapping("/api/v2/menu-query")
+public class MenuQueryController {
 
     private final ProductCatalogService productCatalogService;
 
 
 
     // FOR CASHIER AND ADMIN
-    @GetMapping("/menu")
+    @GetMapping
     public ResponseEntity<List<MenuItemsResponse>> getMenu () {
         return ResponseEntity.ok(productCatalogService.getMenuItems());
     }

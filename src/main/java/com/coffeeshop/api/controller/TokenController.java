@@ -1,4 +1,4 @@
-package com.coffeeshop.api.controller.oldController;
+package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.AccessTokenResponse;
 import com.coffeeshop.api.service.oldService.AuthTokenService;
