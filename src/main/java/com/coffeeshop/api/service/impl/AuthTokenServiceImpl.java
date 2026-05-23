@@ -5,7 +5,7 @@ import com.coffeeshop.api.domain.RefreshToken;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.dto.AccessTokenResponse;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
-import com.coffeeshop.api.service.oldService.AuthTokenService;
+import com.coffeeshop.api.service.AuthTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -1,7 +1,7 @@
 package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.security.CustomUserDetails;
-import com.coffeeshop.api.service.oldService.UserService;
+import com.coffeeshop.api.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;

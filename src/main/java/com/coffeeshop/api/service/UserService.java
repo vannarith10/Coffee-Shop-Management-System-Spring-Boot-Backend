@@ -1,4 +1,4 @@
-package com.coffeeshop.api.service.oldService;
+package com.coffeeshop.api.service;
 
 import com.coffeeshop.api.dto.*;
 import com.coffeeshop.api.dto.auth.*;

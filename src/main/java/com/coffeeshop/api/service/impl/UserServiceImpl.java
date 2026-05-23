@@ -9,7 +9,7 @@ import com.coffeeshop.api.dto.auth.*;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.security.CustomUserDetails;
-import com.coffeeshop.api.service.oldService.UserService;
+import com.coffeeshop.api.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

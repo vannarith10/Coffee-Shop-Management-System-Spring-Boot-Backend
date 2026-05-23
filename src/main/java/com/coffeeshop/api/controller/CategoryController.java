@@ -3,7 +3,7 @@ package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.category.CategoryResponse;
 import com.coffeeshop.api.dto.category.CreateCategoryRequest;
-import com.coffeeshop.api.service.oldService.CategoryService;
+import com.coffeeshop.api.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
