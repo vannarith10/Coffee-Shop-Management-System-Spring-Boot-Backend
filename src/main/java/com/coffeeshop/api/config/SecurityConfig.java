@@ -2,6 +2,7 @@ package com.coffeeshop.api.config;
 
 
 import com.coffeeshop.api.exception.ExceptionResponse;
+import com.coffeeshop.api.handler.OAuth2Handler;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +36,7 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final ObjectMapper objectMapper;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final OAuth2Handler oAuth2Handler;
 
 
     @Bean
@@ -46,6 +48,10 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler()))
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2Handler.oAuth2SuccessHandle())
+                        .failureHandler(oAuth2Handler.oAuth2FailureHandler())
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
@@ -53,6 +59,7 @@ public class SecurityConfig {
                         // Auth
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/token/get-access-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v2/auth/oauth2/callback").permitAll()
 
 
                         // Public Menu & Shop Info
@@ -113,14 +120,8 @@ public class SecurityConfig {
 
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 
 }

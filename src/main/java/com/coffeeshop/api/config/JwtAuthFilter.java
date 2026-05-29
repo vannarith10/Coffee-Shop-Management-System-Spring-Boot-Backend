@@ -105,8 +105,6 @@ public final class JwtAuthFilter extends OncePerRequestFilter {
 
 
 
-
-
     private boolean isPublic (String path) {
         if (path == null) return true;
 

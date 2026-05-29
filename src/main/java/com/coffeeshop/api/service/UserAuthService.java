@@ -1,5 +1,6 @@
 package com.coffeeshop.api.service;
 
+import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.dto.auth.LoginRequest;
 import com.coffeeshop.api.dto.auth.LoginResponse;
 

@@ -23,34 +23,57 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+
     @Column(nullable = false, length = 50)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 50)
+
+    @Column(nullable = true, unique = true, length = 50)    // Nullable for OAuth2 users
     private String username;
 
-    @Column(nullable = false)
+
+    @Column(nullable = true)    // OAuth2 doesn't come with password, so it can be null
     private String password;
 
-    @Enumerated(EnumType.STRING)// Store enum as text
+
+    @Column(unique = true)  // Required for OAuth2
+    private String email;
+
+
+    @Column(nullable = false, length = 20)
+    @Builder.Default    // ensure Lombok's builder respects my default initialization 'local' for users without OAuth2
+    private String provider = "local";  // default 'local' for existing rows
+
+
+    @Column(name = "provider_id", length = 255)
+    private String providerId;
+
+
+    @Enumerated(EnumType.STRING)    // Store enum as text
     @Column(nullable = false, length = 20)
     private Role role;
+
 
     @Column(nullable = false)
     private boolean isActive;
 
-    @Enumerated(EnumType.STRING)// Store enum as text
+
+    @Enumerated(EnumType.STRING)    // Store enum as text
     @Column(nullable = false)
     private Status status;
+
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+
     private Instant updatedAt;
 
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10) // MORNING, AFTERNOON, FULL_DAY
+    @Column(nullable = false, length = 10)  // MORNING, AFTERNOON, FULL_DAY
     private ShiftType shiftType;
+
 
     // List of Enum will not work as well as a single Enum
     @ElementCollection(targetClass = Schedule.class, fetch = FetchType.EAGER)
@@ -62,9 +85,25 @@ public class User {
     @Column(name = "schedule_day", nullable = false, length = 10)
     private List<Schedule> schedules;
 
+
     private String imageKey;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_profile_id")
     private ShopProfile shopProfile;
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+

@@ -4,6 +4,7 @@ import com.coffeeshop.api.config.JwtService;
 import com.coffeeshop.api.domain.RefreshToken;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.dto.AccessTokenResponse;
+import com.coffeeshop.api.dto.auth.LoginResponse;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
 import com.coffeeshop.api.service.AuthTokenService;
 import lombok.RequiredArgsConstructor;
@@ -79,4 +80,51 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                 )
         );
     }
+
+
+    //=================================
+    // GENERATE TOKEN
+    //=================================
+    @jakarta.transaction.Transactional
+    @Override
+    public LoginResponse generateTokenResponse(User user) {
+        refreshTokenRepository.deleteByUser_Id(user.getId());
+        refreshTokenRepository.flush();
+
+        String accessToken = jwtService.generateAccessToken(user);
+        long accessExpiry = jwtService.getExpiresInSeconds();
+        String refreshToken = jwtService.generateRefreshToken(user);
+        Instant refreshExpiry = jwtService.getRefreshExpiryInstant();
+
+        RefreshToken rToken = RefreshToken.builder()
+                .token(refreshToken)
+                .user(user)
+                .expiresAt(refreshExpiry)
+                .revoked(false)
+                .build();
+        refreshTokenRepository.save(rToken);
+
+        LoginResponse.UserInfo userInfo = LoginResponse.UserInfo.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .build();
+
+        LoginResponse.Refresh refresh = LoginResponse.Refresh.builder()
+                .token(refreshToken)
+                .expiresAt(refreshExpiry)
+                .build();
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .tokenType("Bearer")
+                .expiresIn(accessExpiry)
+                .refresh(refresh)
+                .userInfo(userInfo)
+                .build();
+    }
+
+
+
+
 }
