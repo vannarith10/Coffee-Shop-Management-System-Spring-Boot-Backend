@@ -36,7 +36,7 @@ public class User {
     private String password;
 
 
-    @Column(unique = true)  // Required for OAuth2
+    @Column(unique = true)  // Required unique for OAuth2
     private String email;
 
 
@@ -60,7 +60,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)    // Store enum as text
     @Column(nullable = false)
-    private Status status;
+    private Status status; // ACTIVE, INACTIVE, SUSPENDED
 
 
     @Column(nullable = false, updatable = false)
@@ -75,7 +75,7 @@ public class User {
     private ShiftType shiftType;
 
 
-    // List of Enum will not work as well as a single Enum
+    // List of Enum won't work as well as a single Enum
     @ElementCollection(targetClass = Schedule.class, fetch = FetchType.EAGER)
     @CollectionTable(
             name = "user_schedules",
@@ -92,7 +92,6 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_profile_id")
     private ShopProfile shopProfile;
-
 
 }
 

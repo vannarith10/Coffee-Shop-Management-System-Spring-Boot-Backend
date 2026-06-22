@@ -37,9 +37,9 @@ public class OAuth2Handler extends SimpleUrlAuthenticationSuccessHandler {
 
 
 
-    //===================================
-    // OAUTH2 SUCCESS HANDLER
-    //===================================
+    //=====================================================
+    // OAUTH2 SUCCESS HANDLER | Create new user if success
+    //=====================================================
     public AuthenticationSuccessHandler oAuth2SuccessHandle () {
         return (request, response, authentication) -> {
             OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
@@ -50,13 +50,15 @@ public class OAuth2Handler extends SimpleUrlAuthenticationSuccessHandler {
             String email = oauth2User.getAttribute("email");
             String name = oauth2User.getAttribute("name");
 
+
+            // Find User first || Or else Create one
             User user = userRepository.findUserByProviderAndProviderId(provider, providerId)
                     .or(() -> userRepository.findByEmail(email))
                     .orElseGet(() -> {
                         User newUser = User.builder()
                                 .name(name != null ? name : "Google User")
                                 .email(email)
-                                .username(email)
+                                .username(email.split("@")[0])
 
                                 .provider(provider)
                                 .providerId(providerId)
@@ -73,6 +75,8 @@ public class OAuth2Handler extends SimpleUrlAuthenticationSuccessHandler {
                         return userRepository.save(newUser);
                     });
 
+
+            // VALIDATE USER
             if (user.getProviderId() == null) {
                 user.setProviderId(providerId);
                 user.setProvider(provider);
@@ -90,9 +94,9 @@ public class OAuth2Handler extends SimpleUrlAuthenticationSuccessHandler {
             }
 
 
-
             // TOKEN FLOW
             LoginResponse loginResponse = authTokenService.generateTokenResponse(user);
+
 
             // STORE and REDIRECT
             String code = oAuth2CodeService.store(loginResponse);
@@ -102,9 +106,9 @@ public class OAuth2Handler extends SimpleUrlAuthenticationSuccessHandler {
 
 
 
-    //===================================
-    // OAUTH2 FAILURE HANDLER
-    //===================================
+    //================================================
+    // OAUTH2 FAILURE HANDLER | Go to login page again
+    //================================================
     public AuthenticationFailureHandler oAuth2FailureHandler () {
         return ((request, response, exception) -> {
            response.sendRedirect(FRONTEND_BASE_URL + FRONTEND_LOGIN_PATH);

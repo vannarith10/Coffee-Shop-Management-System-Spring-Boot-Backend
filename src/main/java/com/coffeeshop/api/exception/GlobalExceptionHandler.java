@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+
     // Handle ResponseStatusException (your custom service errors)
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ExceptionResponse<String>> handleServiceException(ResponseStatusException ex) {
@@ -25,6 +26,8 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(ex.getStatusCode()).body(errorResponse);
     }
+
+
 
     // Handle validation errors (DTO @Valid failures)
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -44,6 +47,8 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(errorResponse);
     }
+
+
 
     // Handle any unexpected errors
     @ExceptionHandler(Exception.class)

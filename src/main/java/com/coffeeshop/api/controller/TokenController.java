@@ -1,15 +1,16 @@
 package com.coffeeshop.api.controller;
 
-import com.coffeeshop.api.dto.AccessTokenResponse;
+
+import com.coffeeshop.api.dto.auth.RefreshAccessTokenRequest;
+import com.coffeeshop.api.dto.auth.RefreshAccessTokenResponse;
 import com.coffeeshop.api.service.AuthTokenService;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/token")
+@RequestMapping("/api/v2/token")
 @RequiredArgsConstructor
 public class TokenController {
 
@@ -17,21 +18,13 @@ public class TokenController {
 
 
     @PostMapping("/get-access-token")
-    public ResponseEntity<AccessTokenResponse> getAccessToken(@RequestBody @Validated RefreshToken refreshToken){
+    public ResponseEntity<RefreshAccessTokenResponse> getAccessToken(@RequestBody @Validated RefreshAccessTokenRequest request){
 
-        System.out.println("########## Received refresh request: " + refreshToken);
-        System.out.println("########## Token value: " + refreshToken.token());
+        System.out.println("########## Received refresh request: " + request);
+        System.out.println("########## Token value: " + request.refreshToken());
 
-        AccessTokenResponse response = authTokenService.generateAccessTokenFromRefreshToken(refreshToken.token());
+        RefreshAccessTokenResponse response = authTokenService.generateAccessTokenFromRefreshToken(request.refreshToken());
         return ResponseEntity.ok(response);
     }
-
-
-
-    // ========== DTO ========== //
-    public record RefreshToken (
-            @NotBlank
-            String token
-    ) {}
 
 }

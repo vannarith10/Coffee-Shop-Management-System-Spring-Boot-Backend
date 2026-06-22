@@ -18,9 +18,7 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
 
-        config.setAllowedOriginPatterns(List.of("http://localhost:*",
-                "https://*.ngrok-free.dev", "https://*.trycloudflare.com",
-                "https://words-imported-travelling-designers.trycloudflare.com",
+        config.setAllowedOriginPatterns(List.of("http://localhost:5173",
                 "https://iamvannarith.site"
         ));
 

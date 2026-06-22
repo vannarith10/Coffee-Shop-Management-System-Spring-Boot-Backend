@@ -58,7 +58,7 @@ public class SecurityConfig {
 
                         // Auth
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/token/get-access-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v2/token/get-access-token").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/oauth2/callback").permitAll()
 
 
@@ -115,6 +115,13 @@ public class SecurityConfig {
                     .build();
             writeJson(response, HttpStatus.FORBIDDEN, error);
         };
+    }
+
+
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
 
