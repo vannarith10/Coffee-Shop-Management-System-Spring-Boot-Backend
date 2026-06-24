@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v2/anlytics")
+@RequestMapping("/api/v2/analytics")
 @PreAuthorize("hasRole('ADMIN')")
 public class AnalyticsController {
 

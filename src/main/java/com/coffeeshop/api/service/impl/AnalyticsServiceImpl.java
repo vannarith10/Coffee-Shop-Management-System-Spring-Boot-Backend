@@ -92,10 +92,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         Instant start = resolveStart(request.range(), BUSINESS_TZ);
 
         int unitsTarget = 100;
-        Pageable pageable = PaginationHelper.of(
-                request.page() != null ? request.page() : 0,
-                request.size() != null ? request.size() : 10
-        );
+
+        Pageable pageable = PaginationHelper.of(request.page(), request.size());
 
         Page<TopSellingProductProjection> projections = orderItemRepository.findTopSellingProductsByDateRange(DONE, start, end, pageable);
 
@@ -107,8 +105,16 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                         .unitsSold(Math.toIntExact(pro.unitsSold()))
                         .build()).toList();
 
+        var pagination = TopSellingProductResponse.Pagination.builder()
+                .page(pageable.getPageNumber() + 1)
+                .size(pageable.getPageSize())
+                .totalPages(projections.getTotalPages())
+                .totalItems(projections.getTotalElements())
+                .build();
+
 
         return TopSellingProductResponse.builder()
+                .pagination(pagination)
                 .unitsTarget(unitsTarget)
                 .topProducts(items)
                 .build();
