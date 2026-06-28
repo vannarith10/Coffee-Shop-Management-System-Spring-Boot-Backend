@@ -52,8 +52,8 @@ public class EmployeeController {
     @PatchMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllEmployeeProfilesResponse.Employee> patchEmployee (
             @PathVariable UUID id,
-            @RequestPart(required = false) @Valid EditStaffRequest request,
-            @RequestPart(required = false) MultipartFile image
+            @RequestPart(required = false, value = "data") @Valid EditStaffRequest request,
+            @RequestPart(required = false, value = "image") MultipartFile image
             ) {
         return ResponseEntity.ok(employeeService.editEmployeeDetail(id, request, image));
     }

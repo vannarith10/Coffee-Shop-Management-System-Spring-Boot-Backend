@@ -25,9 +25,6 @@ public record EditStaffRequest(
         @JsonProperty("role")
         Role role,
 
-        @JsonProperty("is_active")
-        Boolean isActive,
-
         @JsonProperty("status")
         Status status,
 

@@ -1,6 +1,7 @@
 package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.User;
+import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllEmployeeProfilesResponse;
@@ -23,7 +24,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -42,12 +45,19 @@ public class EmployeeServiceImpl implements EmployeeService {
     //--------------------------------
     // GET ALL EMPLOYEE PROFILES
     //--------------------------------
+    private static final Map<Role, Integer> ROLE_PRIORITY = Map.of(
+            Role.ADMIN, 1,
+            Role.CASHIER, 2,
+            Role.BARISTA, 3,
+            Role.STAFF, 4
+    );
+
     @Override
     public GetAllEmployeeProfilesResponse getAllEmployeeProfiles(int page, int size) {
         authorizationGuard.requireAdmin();
 
         Pageable pageable = PaginationHelper.of(page, size);
-        Page<User> userPage = userRepository.findAll(pageable);
+        Page<User> userPage = userRepository.findAllByRolePriority(pageable);
 
         List<GetAllEmployeeProfilesResponse.Employee> staffList = userPage
                 .getContent()
@@ -129,7 +139,6 @@ public class EmployeeServiceImpl implements EmployeeService {
             applyUsername(user, request.username());
             applyPassword(user, request.password());
             if (request.role() != null) user.setRole(request.role());
-            if (request.isActive() != null) user.setActive(request.isActive());
             if (request.status() != null) user.setStatus(request.status());
             if (request.shiftType() != null) user.setShiftType(request.shiftType());
             if (request.schedules() != null && !request.schedules().isEmpty()) user.setSchedules(request.schedules());
@@ -139,6 +148,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         return userMapper.toEmployeeResponseDto(userRepository.save(user));
     }
 
+
+    //===================================
+    //
+    // HELPER
+    //
+    //===================================
 
 
     // ADD NEW EMPLOYEE VALIDATION
@@ -187,7 +202,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private boolean isAllBlank(EditStaffRequest r) {
         return r.name() == null && r.username() == null && r.password() == null
                 && r.role() == null && r.status() == null && r.shiftType() == null
-                && r.isActive() == null && (r.schedules() == null || r.schedules().isEmpty());
+                && (r.schedules() == null || r.schedules().isEmpty());
     }
 
     // NAME
