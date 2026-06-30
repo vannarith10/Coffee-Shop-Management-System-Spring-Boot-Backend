@@ -14,6 +14,7 @@ import com.coffeeshop.api.repository.CategoryRepository;
 import com.coffeeshop.api.repository.ProductRepository;
 import com.coffeeshop.api.security.AuthorizationGuard;
 import com.coffeeshop.api.service.ProductAdminService;
+import com.coffeeshop.api.websocket.WebSocketEventPublisher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
     private final ImageStorageService imageStorageService;
-
+    private final WebSocketEventPublisher webSocketEventPublisher;
 
 
     //-----------------------
@@ -77,7 +78,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     // GET ALL PRODUCT STOCK STATUSES
     //------------------------------------------
     @Override
-    public ProductStockStatusResponse productStockStatus(int page, int size) {
+    public ProductStockStatusResponse GetAllProductStockStatus(int page, int size) {
         authorizationGuard.requireAdmin();
 
         Pageable pageable = PaginationHelper.of(page, size);
@@ -227,7 +228,11 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
         product.setStockStatus(newStockStatus);
         product.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant());
-        productRepository.save(product);
+        Product saved = productRepository.save(product);
+
+        // WebSocket
+        var response = productMapper.toProductStockStatusItemResponseDto(saved);
+        webSocketEventPublisher.publishProductStockUpdateToAdmins(response);
     }
 
 

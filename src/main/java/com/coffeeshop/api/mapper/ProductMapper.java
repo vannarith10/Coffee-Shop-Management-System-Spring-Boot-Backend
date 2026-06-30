@@ -14,6 +14,7 @@ public class ProductMapper {
     private final ImageStorageService imageStorageService;
 
 
+    // (All Product Details)
     // MAP FROM PRODUCT TO PRODUCT ITEM RESPONSE
     public GetAllProductsResponse.ProductItem toProductItemResponseDto (Product product) {
         return GetAllProductsResponse.ProductItem
@@ -31,7 +32,7 @@ public class ProductMapper {
     }
 
 
-
+    // Product -> Product Item (Stock Status Specific, fewer details)
     // MAP FROM PRODUCT TO PRODUCT STOCK STATUS ITEM
     public ProductStockStatusResponse.ProductItem toProductStockStatusItemResponseDto (Product product) {
         return ProductStockStatusResponse.ProductItem

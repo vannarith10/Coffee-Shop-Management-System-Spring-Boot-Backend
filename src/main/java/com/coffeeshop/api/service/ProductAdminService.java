@@ -13,7 +13,7 @@ public interface ProductAdminService {
 
     GetAllProductsResponse getAllProducts (int page, int size);
 
-    ProductStockStatusResponse productStockStatus (int page, int size);
+    ProductStockStatusResponse GetAllProductStockStatus (int page, int size);
 
 
     GetAllProductsResponse.ProductItem addNewProduct (AddNewProductRequest request, MultipartFile image);

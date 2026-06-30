@@ -9,6 +9,10 @@ import org.springframework.stereotype.Component;
 public class WebSocketEventPublisher {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private static final String TOPIC_ADMIN = "/topic/admin";
+    private static final String TOPIC_CASHIER = "/topic/cashier";
+    private static final String TOPIC_BARISTA = "/topic/barista";
+    private static final String TOPIC_PUBLIC = "/topic/public";
 
     // Send to Barista
     public void publishToBarista (Object event) {
@@ -18,7 +22,12 @@ public class WebSocketEventPublisher {
     // Send to All ADMINS
     // Non-Admin attempting to subscribe will be rejected by ChannelAuthInterceptor
     public void publishEmployeeUpdateToAllAdmins (Object event) {
-        simpMessagingTemplate.convertAndSend("/topic/admin/update-employee-details", event);
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/update-employee-details", event);
+    }
+
+    // STOCK Update
+    public void publishProductStockUpdateToAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/stock-update", event);
     }
 
 }

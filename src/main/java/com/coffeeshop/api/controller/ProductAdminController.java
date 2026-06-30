@@ -46,7 +46,7 @@ public class ProductAdminController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(productAdminService.productStockStatus(page, size));
+        return ResponseEntity.ok(productAdminService.GetAllProductStockStatus(page, size));
     }
 
 
