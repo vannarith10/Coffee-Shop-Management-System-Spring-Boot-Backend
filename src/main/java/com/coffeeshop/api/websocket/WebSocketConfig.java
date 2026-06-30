@@ -13,12 +13,18 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final WebSocketAuthHandshakeInterceptor webSocketAuthHandshakeInterceptor;
+    private final ChannelAuthInterceptor channelAuthInterceptor;
+    private final AuthHandshakeHandler authHandshakeHandler;
+
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry
                 .addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:5173", "*");
+                .setAllowedOriginPatterns("http://localhost:5173", "*")
+                .addInterceptors(webSocketAuthHandshakeInterceptor)
+                .setHandshakeHandler(authHandshakeHandler);
     }
 
     @Override
@@ -28,4 +34,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setUserDestinationPrefix("/user");
     }
 
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(channelAuthInterceptor);
+    }
 }

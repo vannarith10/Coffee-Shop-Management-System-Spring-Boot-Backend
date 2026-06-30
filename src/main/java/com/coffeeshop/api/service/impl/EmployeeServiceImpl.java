@@ -11,6 +11,7 @@ import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.security.AuthorizationGuard;
 import com.coffeeshop.api.service.EmployeeService;
+import com.coffeeshop.api.websocket.WebSocketEventPublisher;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final UserMapper userMapper;
     private final ImageStorageService imageStorageService;
     private final PasswordEncoder passwordEncoder;
+    private final WebSocketEventPublisher webSocketEventPublisher;
 
 
     //--------------------------------
@@ -145,7 +147,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         applyImage(user, image);
-        return userMapper.toEmployeeResponseDto(userRepository.save(user));
+
+        User savedUser = userRepository.save(user);
+        GetAllEmployeeProfilesResponse.Employee response = userMapper.toEmployeeResponseDto(savedUser);
+
+        // WebSocket
+        webSocketEventPublisher.publishEmployeeUpdateToAllAdmins(response);
+
+        return response;
     }
 
 

@@ -10,8 +10,15 @@ public class WebSocketEventPublisher {
 
     private final SimpMessagingTemplate simpMessagingTemplate;
 
+    // Send to Barista
     public void publishToBarista (Object event) {
         simpMessagingTemplate.convertAndSend("/topic/barista", event);
+    }
+
+    // Send to All ADMINS
+    // Non-Admin attempting to subscribe will be rejected by ChannelAuthInterceptor
+    public void publishEmployeeUpdateToAllAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend("/topic/admin/update-employee-details", event);
     }
 
 }
