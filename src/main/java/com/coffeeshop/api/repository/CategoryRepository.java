@@ -2,6 +2,8 @@ package com.coffeeshop.api.repository;
 
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.enums.CategoryType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -16,4 +18,6 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     Optional<Category> findByNameIgnoreCase(String name);
 
+    @Override
+    Page<Category> findAll(Pageable pageable);
 }

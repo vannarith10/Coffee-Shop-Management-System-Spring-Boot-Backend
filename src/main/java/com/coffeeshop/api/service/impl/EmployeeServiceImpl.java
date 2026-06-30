@@ -54,6 +54,10 @@ public class EmployeeServiceImpl implements EmployeeService {
             Role.STAFF, 4
     );
 
+
+    //=======================
+    // Get All Employees
+    //=======================
     @Override
     public GetAllEmployeeProfilesResponse getAllEmployeeProfiles(int page, int size) {
         authorizationGuard.requireAdmin();

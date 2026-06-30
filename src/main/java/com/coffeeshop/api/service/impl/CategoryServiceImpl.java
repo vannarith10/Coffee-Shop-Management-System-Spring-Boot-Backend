@@ -7,16 +7,22 @@ import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.category.CategoryResponse;
 import com.coffeeshop.api.dto.category.CreateCategoryRequest;
+import com.coffeeshop.api.dto.category.GetAllCategoriesResponse;
+import com.coffeeshop.api.helper.PaginationHelper;
+import com.coffeeshop.api.mapper.CategoryMapper;
 import com.coffeeshop.api.repository.CategoryRepository;
 import com.coffeeshop.api.repository.UserRepository;
+import com.coffeeshop.api.security.AuthorizationGuard;
 import com.coffeeshop.api.service.CategoryService;
 import com.coffeeshop.api.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import org.springframework.data.domain.Pageable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +36,8 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final UserService userService;
     private final UserRepository userRepository;
-
+    private final AuthorizationGuard authorizationGuard;
+    private final CategoryMapper categoryMapper;
 
 
     // =============== Create Category =============== //
@@ -107,6 +114,31 @@ public class CategoryServiceImpl implements CategoryService {
                 category.getName(),
                 category.isActive()
         );
+    }
+
+
+
+
+
+    //=============================
+    // Get all Categories
+    //=============================
+    @Override
+    public GetAllCategoriesResponse getAllCategoies(int page, int size) {
+        authorizationGuard.requireAdmin();
+
+        Pageable pageable = PaginationHelper.of(page, size);
+        Page<Category> categories = categoryRepository.findAll(pageable);
+
+        List<GetAllCategoriesResponse.Category> categoryList = categories
+                .getContent()
+                .stream()
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
+
+        return GetAllCategoriesResponse.builder()
+                .categories(categoryList)
+                .build();
     }
 
 

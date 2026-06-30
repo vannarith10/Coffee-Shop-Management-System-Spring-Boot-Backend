@@ -3,15 +3,13 @@ package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.category.CategoryResponse;
 import com.coffeeshop.api.dto.category.CreateCategoryRequest;
+import com.coffeeshop.api.dto.category.GetAllCategoriesResponse;
 import com.coffeeshop.api.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +26,17 @@ public class CategoryController {
             @Valid @RequestBody CreateCategoryRequest request
             ) {
         return ResponseEntity.status(201).body(categoryService.createCategory(request));
+    }
+
+
+    //
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<GetAllCategoriesResponse> getAllCategories (
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(categoryService.getAllCategoies(page, size));
     }
 
 
