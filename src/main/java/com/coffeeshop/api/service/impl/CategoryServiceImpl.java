@@ -5,9 +5,11 @@ import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.category.CategoryResponse;
 import com.coffeeshop.api.dto.category.CreateCategoryRequest;
 import com.coffeeshop.api.dto.category.GetAllCategoriesResponse;
+import com.coffeeshop.api.dto.category.PatchCategoryRequest;
 import com.coffeeshop.api.helper.PaginationHelper;
 import com.coffeeshop.api.mapper.CategoryMapper;
 import com.coffeeshop.api.repository.CategoryRepository;
@@ -15,6 +17,7 @@ import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.security.AuthorizationGuard;
 import com.coffeeshop.api.service.CategoryService;
 import com.coffeeshop.api.service.UserService;
+import com.coffeeshop.api.websocket.WebSocketEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -38,10 +41,12 @@ public class CategoryServiceImpl implements CategoryService {
     private final UserRepository userRepository;
     private final AuthorizationGuard authorizationGuard;
     private final CategoryMapper categoryMapper;
+    private final WebSocketEventPublisher webSocketEventPublisher;
 
 
-    // =============== Create Category =============== //
-    // ===== Admin Only ===== //
+    // ===============================
+    // Create Category
+    // ===============================
     @Override
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
@@ -106,16 +111,62 @@ public class CategoryServiceImpl implements CategoryService {
                 .active(request.isActive())
                 .build();
 
-        categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
 
-        return new CategoryResponse(
-                category.getId(),
-                category.getType(),
-                category.getName(),
-                category.isActive()
-        );
+        return CategoryResponse.builder()
+                .categoryId(saved.getId())
+                .categoryName(saved.getName())
+                .categoryType(saved.getType())
+                .isActive(saved.isActive())
+                .build();
     }
 
+
+
+    //=========================
+    // Patch Category
+    //=========================
+    @Transactional
+    @Override
+    public CategoryResponse patchCategory(UUID categoryId, PatchCategoryRequest request) {
+        // Name, Type, Status
+        authorizationGuard.requireAdmin();
+        Category category = categoryRepository.findById(categoryId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")
+        );
+
+        // Name
+        if (request.newName() != null && !request.newName().isBlank()) {
+            String name = request.newName().trim().toUpperCase();
+            if (!name.equals(category.getName()) && categoryRepository.existsByName(name)){
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name already exist");
+            } else {
+            category.setName(name);
+            }
+        }
+        // Type
+        if (request.newType() != null) {
+            category.setType(request.newType());
+        }
+        // Status
+        if (request.newStatus() != null) {
+            category.setActive(request.newStatus());
+        }
+
+        Category saved = categoryRepository.save(category);
+
+
+        // WebSocket
+        var response = CategoryResponse.builder()
+                .categoryId(saved.getId())
+                .categoryName(saved.getName())
+                .categoryType(saved.getType())
+                .isActive(saved.isActive())
+                .build();
+        webSocketEventPublisher.publishCategoryUpdateToAdmins(response);
+
+        return response;
+    }
 
 
 
@@ -136,7 +187,15 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(categoryMapper::toCategoryResponse)
                 .toList();
 
+        var pagination = Pagination.builder()
+                .page(pageable.getPageNumber() + 1)
+                .size(pageable.getPageSize())
+                .totalPages(categories.getTotalPages())
+                .totalItems(categories.getTotalElements())
+                .build();
+
         return GetAllCategoriesResponse.builder()
+                .pagination(pagination)
                 .categories(categoryList)
                 .build();
     }

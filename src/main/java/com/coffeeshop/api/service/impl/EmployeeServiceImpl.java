@@ -2,6 +2,7 @@ package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllEmployeeProfilesResponse;
@@ -71,8 +72,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .map(userMapper::toEmployeeResponseDto)
                 .toList();
 
-        GetAllEmployeeProfilesResponse.Pagination pagination =
-                GetAllEmployeeProfilesResponse.Pagination.builder()
+        var pagination = Pagination.builder()
                         .page(pageable.getPageNumber() + 1)
                         .size(pageable.getPageSize())
                         .totalPages(userPage.getTotalPages())

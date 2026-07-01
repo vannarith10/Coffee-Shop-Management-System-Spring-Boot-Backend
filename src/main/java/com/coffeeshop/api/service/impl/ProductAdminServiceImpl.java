@@ -3,6 +3,7 @@ package com.coffeeshop.api.service.impl;
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
 import com.coffeeshop.api.domain.enums.ProductStock;
+import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.adminDashboard.product.ProductStockStatusResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.AddNewProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
@@ -64,9 +65,16 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                         .map(productMapper::toProductItemResponseDto)
                         .toList();
 
+        var pagination = Pagination.builder()
+                .page(pageable.getPageNumber() + 1)
+                .size(pageable.getPageSize())
+                .totalPages(products.getTotalPages())
+                .totalItems(products.getTotalElements())
+                .build();
+
         return GetAllProductsResponse
                 .builder()
-                .pagination(mapPagination(products, pageable))
+                .pagination(pagination)
                 .productItems(items)
                 .build();
     }
@@ -90,14 +98,16 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                         .map(productMapper::toProductStockStatusItemResponseDto)
                         .toList();
 
+        var pagination = Pagination.builder()
+                .page(pageable.getPageNumber() + 1)
+                .size(pageable.getPageSize())
+                .totalPages(productPage.getTotalPages())
+                .totalItems(productPage.getTotalElements())
+                .build();
+
         return ProductStockStatusResponse.builder()
                 .message("Product stock statuses")
-                .pagination(ProductStockStatusResponse.Pagination.builder()
-                        .page(pageable.getPageNumber() + 1)
-                        .size(pageable.getPageSize())
-                        .totalPages(productPage.getTotalPages())
-                        .totalItems(productPage.getTotalElements())
-                        .build())
+                .pagination(pagination)
                 .products(items)
                 .build();
     }
@@ -238,14 +248,6 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
 
 
-
-
-    // BUILD PAGINATION
-    private GetAllProductsResponse.Pagination mapPagination(Page<Product> page, Pageable pageable) {
-        return GetAllProductsResponse.Pagination.builder()
-                .page(pageable.getPageNumber() + 1).size(pageable.getPageSize())
-                .totalPages(page.getTotalPages()).totalItems(page.getTotalElements()).build();
-    }
 
     // VALIDATE NAME
     private String validateName(String name) {

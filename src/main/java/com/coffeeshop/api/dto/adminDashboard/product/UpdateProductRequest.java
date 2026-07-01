@@ -24,6 +24,8 @@ public record UpdateProductRequest(
         @JsonProperty("description")
         String description
 ) {
+
+        //
         public boolean isEmpty () {
                 return (name == null || name.isBlank())
                         && (categoryName == null || categoryName.isBlank())

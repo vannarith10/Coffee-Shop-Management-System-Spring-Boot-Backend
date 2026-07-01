@@ -1,6 +1,7 @@
 package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.enums.OrderStatus;
+import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.adminDashboard.*;
 import com.coffeeshop.api.helper.MoneyHelper;
 import com.coffeeshop.api.helper.PaginationHelper;
@@ -105,7 +106,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                         .unitsSold(Math.toIntExact(pro.unitsSold()))
                         .build()).toList();
 
-        var pagination = TopSellingProductResponse.Pagination.builder()
+        var pagination = Pagination.builder()
                 .page(pageable.getPageNumber() + 1)
                 .size(pageable.getPageSize())
                 .totalPages(projections.getTotalPages())

@@ -30,4 +30,9 @@ public class WebSocketEventPublisher {
         simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/stock-update", event);
     }
 
+    // Category Update
+    public void publishCategoryUpdateToAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/category-update", event);
+    }
+
 }

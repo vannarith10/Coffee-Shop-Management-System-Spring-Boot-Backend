@@ -13,6 +13,7 @@ public class CategoryMapper {
 
     public GetAllCategoriesResponse.Category toCategoryResponse (Category category) {
         return GetAllCategoriesResponse.Category.builder()
+                .categoryId(category.getId())
                 .categoryName(category.getName())
                 .categoryType(category.getType())
                 .isActive(category.isActive())

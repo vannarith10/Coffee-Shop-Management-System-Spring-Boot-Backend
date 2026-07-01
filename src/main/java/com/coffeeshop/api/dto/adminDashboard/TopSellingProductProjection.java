@@ -1,7 +1,5 @@
 package com.coffeeshop.api.dto.adminDashboard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.UUID;
 
 public record TopSellingProductProjection(

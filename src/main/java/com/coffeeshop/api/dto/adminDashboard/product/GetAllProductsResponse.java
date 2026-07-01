@@ -2,6 +2,7 @@ package com.coffeeshop.api.dto.adminDashboard.product;
 
 import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.ProductStock;
+import com.coffeeshop.api.dto.Pagination;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
@@ -17,21 +18,6 @@ public record GetAllProductsResponse(
         @JsonProperty("product_items")
         List<ProductItem> productItems
 ) {
-
-    @Builder
-    public record Pagination (
-            @JsonProperty("page")
-            Integer page,
-
-            @JsonProperty("size")
-            Integer size,
-
-            @JsonProperty("total_pages")
-            Integer totalPages,
-
-            @JsonProperty("total_items")
-            Long totalItems
-    ) {}
 
     @Builder
     public record ProductItem (

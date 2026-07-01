@@ -1,5 +1,6 @@
 package com.coffeeshop.api.dto.adminDashboard;
 
+import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.adminDashboard.product.ProductStockStatusResponse;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -35,18 +36,4 @@ public record TopSellingProductResponse(
             Integer unitsSold
     ){}
 
-    @Builder
-    public record Pagination (
-            @JsonProperty("page")
-            Integer page,
-
-            @JsonProperty("size")
-            Integer size,
-
-            @JsonProperty("total_pages")
-            Integer totalPages,
-
-            @JsonProperty("total_items")
-            Long totalItems
-    ) {}
 }

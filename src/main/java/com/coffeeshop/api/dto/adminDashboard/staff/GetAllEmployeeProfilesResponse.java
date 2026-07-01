@@ -4,6 +4,7 @@ import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.domain.enums.Schedule;
 import com.coffeeshop.api.domain.enums.ShiftType;
 import com.coffeeshop.api.domain.enums.Status;
+import com.coffeeshop.api.dto.Pagination;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
@@ -56,19 +57,4 @@ public record GetAllEmployeeProfilesResponse(
             String imageUrl
     ) {}
 
-
-    @Builder
-    public record Pagination (
-            @JsonProperty("page")
-            Integer page,
-
-            @JsonProperty("size")
-            Integer size,
-
-            @JsonProperty("total_pages")
-            Integer totalPages,
-
-            @JsonProperty("total_items")
-            Long totalItems
-    ) {}
 }
