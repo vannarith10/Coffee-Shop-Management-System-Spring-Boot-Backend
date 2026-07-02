@@ -185,7 +185,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category saved = categoryRepository.save(category);
 
 
-        // WebSocket
+        // WebSocket | send new value
         var response = CategoryResponse.builder()
                 .categoryId(saved.getId())
                 .categoryName(saved.getName())
@@ -193,6 +193,15 @@ public class CategoryServiceImpl implements CategoryService {
                 .isActive(saved.isActive())
                 .build();
         webSocketEventPublisher.publishCategoryUpdateToAdmins(response);
+
+        // Send new status
+        var res = CategoryStatusResponse.builder()
+                .totalCategories(categoryRepository.count())
+                .totalDrinks(categoryRepository.countByType(CategoryType.DRINK))
+                .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
+                .totalDisables(categoryRepository.countByActiveFalse())
+                .build();
+        webSocketEventPublisher.publishCategoryStatusToAdmins(res);
 
         return response;
     }
