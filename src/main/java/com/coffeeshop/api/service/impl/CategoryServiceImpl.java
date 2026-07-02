@@ -6,10 +6,7 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.Pagination;
-import com.coffeeshop.api.dto.category.CategoryResponse;
-import com.coffeeshop.api.dto.category.CreateCategoryRequest;
-import com.coffeeshop.api.dto.category.GetAllCategoriesResponse;
-import com.coffeeshop.api.dto.category.PatchCategoryRequest;
+import com.coffeeshop.api.dto.category.*;
 import com.coffeeshop.api.helper.PaginationHelper;
 import com.coffeeshop.api.mapper.CategoryMapper;
 import com.coffeeshop.api.repository.CategoryRepository;
@@ -113,13 +110,45 @@ public class CategoryServiceImpl implements CategoryService {
 
         Category saved = categoryRepository.save(category);
 
-        return CategoryResponse.builder()
+        // WebSocket | Send Category
+        var response = CategoryResponse.builder()
                 .categoryId(saved.getId())
                 .categoryName(saved.getName())
                 .categoryType(saved.getType())
                 .isActive(saved.isActive())
                 .build();
+        webSocketEventPublisher.publishCategoryCreateToAdmins(response);
+
+        // WebSocket | Send Status
+        var status = CategoryStatusResponse.builder()
+                .totalCategories(categoryRepository.count())
+                .totalDrinks(categoryRepository.countByType(CategoryType.DRINK))
+                .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
+                .totalDisables(categoryRepository.countByActiveFalse())
+                .build();
+        webSocketEventPublisher.publishCategoryStatusToAdmins(status);
+
+        return response;
     }
+
+
+
+
+    // =============================
+    // Get Category Status
+    // =============================
+    @Override
+    public CategoryStatusResponse getCategoryStatus() {
+        authorizationGuard.requireAdmin();
+
+        return CategoryStatusResponse.builder()
+                .totalCategories(categoryRepository.count())
+                .totalDrinks(categoryRepository.countByType(CategoryType.DRINK))
+                .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
+                .totalDisables(categoryRepository.countByActiveFalse())
+                .build();
+    }
+
 
 
 

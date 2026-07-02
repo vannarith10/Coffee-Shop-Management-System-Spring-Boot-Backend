@@ -35,4 +35,14 @@ public class WebSocketEventPublisher {
         simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/category-update", event);
     }
 
+    // Category Create | Send new Category
+    public void publishCategoryCreateToAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/category-create", event);
+    }
+
+    // Category Create | Send new Status
+    public void publishCategoryStatusToAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/category-create-status", event);
+    }
+
 }

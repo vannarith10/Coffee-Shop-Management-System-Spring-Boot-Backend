@@ -22,4 +22,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     @Override
     Page<Category> findAll(Pageable pageable);
+
+    long countByType(CategoryType type);
+
+    long countByActiveFalse();
 }

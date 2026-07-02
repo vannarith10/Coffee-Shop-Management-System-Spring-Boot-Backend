@@ -1,10 +1,7 @@
 package com.coffeeshop.api.controller;
 
 
-import com.coffeeshop.api.dto.category.CategoryResponse;
-import com.coffeeshop.api.dto.category.CreateCategoryRequest;
-import com.coffeeshop.api.dto.category.GetAllCategoriesResponse;
-import com.coffeeshop.api.dto.category.PatchCategoryRequest;
+import com.coffeeshop.api.dto.category.*;
 import com.coffeeshop.api.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +47,13 @@ public class CategoryController {
             @RequestBody PatchCategoryRequest request
             ) {
         return ResponseEntity.ok(categoryService.patchCategory(id, request));
+    }
+
+
+    @GetMapping("/category-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<CategoryStatusResponse> getStatus () {
+        return ResponseEntity.ok(categoryService.getCategoryStatus());
     }
 
 
