@@ -28,6 +28,8 @@ public class ProductMapper {
                 .categoryType(product.getCategory().getType())
                 .categoryName(product.getCategory().getName())
                 .stockStatus(product.getStockStatus())
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
                 .build();
     }
 

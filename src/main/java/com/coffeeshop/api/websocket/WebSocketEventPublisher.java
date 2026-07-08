@@ -45,4 +45,9 @@ public class WebSocketEventPublisher {
         simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/category-create-status", event);
     }
 
+    // Product Update
+    public void publishProductUpdateToAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/product-update", event);
+    }
+
 }

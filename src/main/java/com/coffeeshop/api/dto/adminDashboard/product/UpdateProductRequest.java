@@ -1,6 +1,9 @@
 package com.coffeeshop.api.dto.adminDashboard.product;
 
+import com.coffeeshop.api.domain.enums.CategoryType;
+import com.coffeeshop.api.domain.enums.ProductStock;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import lombok.Builder;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,7 +25,10 @@ public record UpdateProductRequest(
         BigDecimal costPrice,
 
         @JsonProperty("description")
-        String description
+        String description,
+
+        @JsonProperty("stock_status")
+        ProductStock stockStatus
 ) {
 
         //
@@ -31,6 +37,7 @@ public record UpdateProductRequest(
                         && (categoryName == null || categoryName.isBlank())
                         && (sellingPrice == null)
                         && (costPrice == null)
-                        && (description == null || description.isBlank());
+                        && (description == null || description.isBlank())
+                        && (stockStatus == null);
         }
 }

@@ -39,6 +39,14 @@ public class ProductAdminController {
     }
 
 
+    @GetMapping("/get-a-single/{id}")
+    public ResponseEntity<GetAllProductsResponse.ProductItem> getASingleProduct (
+            @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(productAdminService.getASingleProduct(id));
+    }
+
+
 
     // GET STOCK STATUSES
     @GetMapping("/get-statuses")

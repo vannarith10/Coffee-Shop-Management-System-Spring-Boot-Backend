@@ -7,11 +7,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Builder
 public record GetAllProductsResponse(
+
         @JsonProperty("pagination")
         Pagination pagination,
 
@@ -46,6 +48,12 @@ public record GetAllProductsResponse(
             String categoryName,
 
             @JsonProperty("stock_status")
-            ProductStock stockStatus
+            ProductStock stockStatus,
+
+            @JsonProperty("created_at")
+            Instant createdAt,
+
+            @JsonProperty("updated_at")
+            Instant updatedAt
     ) {}
 }

@@ -2,6 +2,7 @@ package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.Category;
 import com.coffeeshop.api.domain.Product;
+import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.adminDashboard.product.ProductStockStatusResponse;
@@ -31,6 +32,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 
@@ -79,6 +81,19 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 .build();
     }
 
+
+
+    // ================================
+    // Get A Single Product
+    // ================================
+    @Override
+    public GetAllProductsResponse.ProductItem getASingleProduct(UUID productId) {
+        authorizationGuard.requireAdmin();
+        Product product = productRepository.findById(productId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found")
+        );
+        return productMapper.toProductItemResponseDto(product);
+    }
 
 
 
@@ -189,40 +204,64 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
         Product product = findProductById(id);
 
+        // Check not null
         if (request.isEmpty() && (image == null || image.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one field or image must be provided.");
         }
 
+        // Name
         if (request.name() != null && !request.name().isBlank()) {
             product.setName(request.name().trim());
         }
 
+        // Category name
         if (request.categoryName() != null && !request.categoryName().isBlank()) {
             Category cat = categoryRepository.findByNameIgnoreCase(request.categoryName().trim())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found."));
             product.setCategory(cat);
         }
 
-        if (request.sellingPrice() != null && request.sellingPrice().compareTo(BigDecimal.ZERO) > 0) {
+        // Price
+        if (request.sellingPrice() != null) {
+            if (request.sellingPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Price must be greater than zero");
+            }
             product.setPrice(request.sellingPrice());
         }
 
-        if (request.costPrice() != null && request.costPrice().compareTo(BigDecimal.ZERO) > 0) {
+        // Cost
+        if (request.costPrice() != null) {
+            if (request.costPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cost must be greater that zero");
+            }
             product.setCostPrice(request.costPrice());
         }
 
+        // Description
         if (request.description() != null && !request.description().isBlank()) {
             product.setDescription(request.description().trim());
         }
 
+        // Image
         if (image != null && !image.isEmpty()) {
             String key = uploadProductImage(image, imageStorageService.buildFolder(product.getCategory().getName()));
             product.setImageKey(key);
         }
 
+        // Stock
+        if (request.stockStatus() != null) {
+            product.setStockStatus(request.stockStatus());
+        }
+
         product.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant());
 
-        return productMapper.toProductItemResponseDto(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        var response = productMapper.toProductItemResponseDto(saved);
+
+        // WebSocket
+        webSocketEventPublisher.publishProductUpdateToAdmins(response);
+
+        return response;
     }
 
 
