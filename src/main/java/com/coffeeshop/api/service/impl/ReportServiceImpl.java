@@ -28,7 +28,7 @@ public class ReportServiceImpl implements ReportService {
 
     private final AuthorizationGuard authorizationGuard;
     private final OrderRepository orderRepository;
-    private static final String CAMBODIA_TIME_ZONE = "Asia/Phnom_Penh";
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
 
     //----------------------
@@ -39,12 +39,12 @@ public class ReportServiceImpl implements ReportService {
         authorizationGuard.requireAdmin();
 
         YearMonth yearMonth = (year != null && month != null) ? YearMonth.of(year, month) : YearMonth.now();
-        Instant start = yearMonth.atDay(1).atStartOfDay(ZoneId.of(CAMBODIA_TIME_ZONE)).toInstant();
-        Instant end = yearMonth.atEndOfMonth().plusDays(1).atStartOfDay(ZoneId.of(CAMBODIA_TIME_ZONE)).toInstant();
+        Instant start = yearMonth.atDay(1).atStartOfDay(BUSINESS_TZ).toInstant();
+        Instant end = yearMonth.atEndOfMonth().plusDays(1).atStartOfDay(BUSINESS_TZ).toInstant();
 
         YearMonth prev = yearMonth.minusMonths(1);
-        Instant prevStart = prev.atDay(1).atStartOfDay(ZoneId.of(CAMBODIA_TIME_ZONE)).toInstant();
-        Instant prevEnd = prev.atEndOfMonth().plusDays(1).atStartOfDay(ZoneId.of(CAMBODIA_TIME_ZONE)).toInstant();
+        Instant prevStart = prev.atDay(1).atStartOfDay(BUSINESS_TZ).toInstant();
+        Instant prevEnd = prev.atEndOfMonth().plusDays(1).atStartOfDay(BUSINESS_TZ).toInstant();
 
         BigDecimal currRev = orderRepository.getTotalRevenue(start, end);
         BigDecimal prevRev = orderRepository.getTotalRevenue(prevStart, prevEnd);

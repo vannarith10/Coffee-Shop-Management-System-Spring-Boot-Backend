@@ -28,14 +28,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
     private static final OrderStatus DONE = OrderStatus.DONE;
-    private static final Instant CAMBODIA_TIME_NOW = ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant();
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ImageStorageService imageStorageService;
     private final AuthorizationGuard authorizationGuard;
-
-
 
 
     //----------------------------
@@ -89,7 +86,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     public TopSellingProductResponse topSellingProducts(TopSellingProductRequest request) {
         authorizationGuard.requireAdmin();
 
-        Instant end = CAMBODIA_TIME_NOW;
+        Instant end = ZonedDateTime.now(BUSINESS_TZ).toInstant();
         Instant start = resolveStart(request.range(), BUSINESS_TZ);
 
         int unitsTarget = 100;
@@ -122,8 +119,6 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
 
-
-
     // Helper
     private Instant resolveStart(TopSellingProductTimeRange range, ZoneId zone) {
         LocalDate now = LocalDate.now(zone);
@@ -136,9 +131,6 @@ public class AnalyticsServiceImpl implements AnalyticsService {
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported range");
         };
     }
-
-
-
 
 }
 

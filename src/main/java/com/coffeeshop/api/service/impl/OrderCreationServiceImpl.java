@@ -39,9 +39,13 @@ public class OrderCreationServiceImpl implements OrderCreationService {
     private final AuthorizationGuard authorizationGuard;
     private final OrderNumberGenerator orderNumberGenerator;
     private final ProductRepository productRepository;
-    private static final Instant CAMBODIA_TIME_NOW = ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant();
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
 
+
+    // ============================================
+    // Create cash order
+    // ============================================
     @Transactional
     @Override
     public CashOrderResponse createCashOrder(CreateOrderRequest request) {
@@ -55,7 +59,7 @@ public class OrderCreationServiceImpl implements OrderCreationService {
         order.setOrderNumber(orderNumberGenerator.generate());
         order.setStatus(OrderStatus.CREATED);
         order.setPaymentMethod(PaymentMethod.CASH);
-        order.setCreatedAt(CAMBODIA_TIME_NOW);
+        order.setCreatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
         order.setNote(request.note());
         order.setCreatedBy(cashier);
 

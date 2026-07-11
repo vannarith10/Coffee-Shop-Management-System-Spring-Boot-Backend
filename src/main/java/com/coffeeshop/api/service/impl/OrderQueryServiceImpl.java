@@ -23,12 +23,12 @@ public class OrderQueryServiceImpl implements OrderQueryService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private static final Instant CAMBODIA_TIME_NOW = ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant();
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
 
     @Override
     public List<OrderMessageToBarista> baristaGetsOrders() {
-        Instant cutoff = CAMBODIA_TIME_NOW.minus(7, ChronoUnit.DAYS);
+        Instant cutoff = ZonedDateTime.now(BUSINESS_TZ).toInstant().minus(7, ChronoUnit.DAYS);
         var statuses = EnumSet.of(OrderStatus.QUEUED, OrderStatus.PREPARING);
 
         List<Order> orders = orderRepository.findVisibleOrders(statuses, cutoff);

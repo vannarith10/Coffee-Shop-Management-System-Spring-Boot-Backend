@@ -39,7 +39,7 @@ public class OrderStatusServiceImpl implements OrderStatusService {
     private final OrderRepository orderRepository;
     private final AuthorizationGuard authorizationGuard;
     private final OrderMapper orderMapper;
-    private static final Instant CAMBODIA_TIME_NOW = ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant();
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
     private final WebSocketEventPublisher webSocketEventPublisher;
     private final PerformanceMetricsService performanceMetricsService;
@@ -70,7 +70,7 @@ public class OrderStatusServiceImpl implements OrderStatusService {
         }
 
         order.setStatus(OrderStatus.QUEUED);
-        order.setConfirmedAt(CAMBODIA_TIME_NOW);
+        order.setConfirmedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
         Order saved = orderRepository.save(order);
 
         var message = orderMapper.toOrderMessageResponseDto(saved);
@@ -122,7 +122,7 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                     .build();
         }
 
-        Instant now = CAMBODIA_TIME_NOW;
+        Instant now = ZonedDateTime.now(BUSINESS_TZ).toInstant();
         switch (requested) {
             case PREPARING -> {
                 if (oldStatus != OrderStatus.QUEUED) throw new ResponseStatusException(HttpStatus.CONFLICT, "Only from QUEUED.");
@@ -156,42 +156,12 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 }
         );
 
-
-        // WS 2: Performance metrics
-        if (saved.getStatus() == OrderStatus.DONE) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                final String path = "/topic/barista-dashboard/metrics";
-
-                @Override
-                public void afterCommit() {
-                    PerformanceMetricsResponse payload = performanceMetricsService.calculate(Duration.parse("PT4M"));
-                    final Object body = Map.of(
-                            "event", "performance.metrics.updated",
-                            "payload", payload
-                    );
-                    simpMessagingTemplate.convertAndSend(path, body);
-                }
-            });
-        }
-
-
-        // WS 3: Admin analytics
-        if (saved.getStatus() == OrderStatus.DONE) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override public void afterCommit() {
-                    BusinessAnalyticsSummaryResponse summary = analyticsService.businessAnalyticsSummary();
-                    simpMessagingTemplate.convertAndSend("/topic/admin-dashboard/summary", summary);
-                }
-            });
-        }
-
         return UpdateOrderStatusResponse.builder()
                 .orderId(saved.getId())
                 .oldStatus(oldStatus)
                 .newStatus(saved.getStatus())
                 .build();
     }
-
 
 }
 

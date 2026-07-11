@@ -23,8 +23,6 @@ public class PerformanceMetricsServiceImpl implements PerformanceMetricsService 
     private final OrderRepository orderRepository;
 
 
-
-
     // Find All Orders Completed Today
     //
     @Override
