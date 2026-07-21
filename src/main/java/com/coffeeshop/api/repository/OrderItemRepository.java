@@ -4,6 +4,7 @@ import com.coffeeshop.api.domain.OrderItem;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 //import com.coffeeshop.api.dto.product.TopSellingProductRow;
 import com.coffeeshop.api.dto.adminDashboard.TopSellingProductProjection;
+import com.coffeeshop.api.dto.adminDashboard.report.GetSalesByCategoryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -51,5 +52,25 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, UUID> {
             Pageable pageable
     );
 
+
+
+    @Query("""
+        SELECT new com.coffeeshop.api.dto.adminDashboard.report.GetSalesByCategoryResponse(
+                c.id,
+                c.name,
+                c.type,
+                SUM(oi.totalPrice)
+            )
+        FROM OrderItem oi
+        JOIN oi.product p
+        JOIN p.category c
+        JOIN oi.order o
+        WHERE o.status = 'DONE'
+            AND o.doneAt >= :start
+            AND o.doneAt < :end
+        GROUP BY c.id, c.name, c.type
+        ORDER BY SUM(oi.totalPrice) DESC
+    """)
+    List<GetSalesByCategoryResponse> findSalesByCategory (Instant start, Instant end);
 
 }

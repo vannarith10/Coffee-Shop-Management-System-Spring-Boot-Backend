@@ -26,6 +26,9 @@ public class OrderQueryServiceImpl implements OrderQueryService {
     private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
 
+    // ============================
+    // Barista order dashboard
+    // ============================
     @Override
     public List<OrderMessageToBarista> baristaGetsOrders() {
         Instant cutoff = ZonedDateTime.now(BUSINESS_TZ).toInstant().minus(7, ChronoUnit.DAYS);

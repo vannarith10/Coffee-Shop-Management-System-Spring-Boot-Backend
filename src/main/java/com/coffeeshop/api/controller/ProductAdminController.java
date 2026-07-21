@@ -1,6 +1,7 @@
 package com.coffeeshop.api.controller;
 
 
+import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.dto.adminDashboard.product.AddNewProductRequest;
 import com.coffeeshop.api.dto.adminDashboard.product.GetAllProductsResponse;
@@ -29,16 +30,31 @@ public class ProductAdminController {
     private final ProductAdminService productAdminService;
 
 
+    // ---------------------------------------------------------
     // GET ALL PRODUCTS
+    // ---------------------------------------------------------
     @GetMapping("/get-all-products")
     public ResponseEntity<GetAllProductsResponse> getProducts (
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ResponseEntity.ok(productAdminService.getAllProducts(page, size));
+            @RequestParam(defaultValue = "10") int size,
+
+            @RequestParam(value = "category_type", required = false)CategoryType categoryType,
+            @RequestParam(value = "category_name", required = false) String categoryName,
+            @RequestParam(value = "keyword", required = false) String keyword
+            ) {
+        return ResponseEntity.ok(productAdminService.getAllProducts(
+                page,
+                size,
+                categoryType,
+                categoryName,
+                keyword
+                ));
     }
 
 
+    // -------------------------------------------------------
+    // Get a product
+    // -------------------------------------------------------
     @GetMapping("/get-a-single/{id}")
     public ResponseEntity<GetAllProductsResponse.ProductItem> getASingleProduct (
             @PathVariable UUID id
@@ -48,7 +64,9 @@ public class ProductAdminController {
 
 
 
+    // -------------------------------------------------
     // GET STOCK STATUSES
+    // -------------------------------------------------
     @GetMapping("/get-statuses")
     public ResponseEntity<ProductStockStatusResponse> stockStatus (
             @RequestParam(defaultValue = "1") int page,
@@ -59,7 +77,9 @@ public class ProductAdminController {
 
 
 
+    // ------------------------------------------
     // UPDATE STOCK
+    // ------------------------------------------
     @PostMapping("/update/{id}/stock-status")
     public void updateStockStatus (
             @PathVariable UUID id,
@@ -70,32 +90,22 @@ public class ProductAdminController {
 
 
 
+    // -------------------------------------------------------
     // ADD NEW PRODUCT
+    // -------------------------------------------------------
     @PostMapping(value = "/add-new", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllProductsResponse.ProductItem> addProduct (
-            @RequestParam("name") @NotBlank String name,
-            @RequestParam("price")BigDecimal price,
-            @RequestParam("cost") BigDecimal cost,
-            @RequestParam("category_name") String categoryName,
-            @RequestParam("stock_status") String stockStatus,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "image", required = false)MultipartFile image
+            @RequestPart("data") AddNewProductRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image
             ) {
-        var request = AddNewProductRequest.builder()
-                .name(name)
-                .sellingPrice(price)
-                .costPrice(cost)
-                .categoryName(categoryName)
-                .stockStatus(stockStatus)
-                .description(description)
-                .build();
-
         return ResponseEntity.status(HttpStatus.CREATED).body(productAdminService.addNewProduct(request, image));
     }
 
 
 
+    // -------------------------------------------
     // PATCH PRODUCT
+    // -------------------------------------------
     @PatchMapping(value = "/{id}/patch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllProductsResponse.ProductItem> patchProduct (
             @PathVariable UUID id,

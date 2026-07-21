@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -36,7 +37,7 @@ public class CategoryController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(categoryService.getAllCategoies(page, size));
+        return ResponseEntity.ok(categoryService.getAllCategories(page, size));
     }
 
 
@@ -54,6 +55,13 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryStatusResponse> getStatus () {
         return ResponseEntity.ok(categoryService.getCategoryStatus());
+    }
+
+
+    @GetMapping("/names")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<CategoryNameAndTypeResponse>> getAllNames () {
+        return ResponseEntity.ok(categoryService.getAllCategoryNames());
     }
 
 

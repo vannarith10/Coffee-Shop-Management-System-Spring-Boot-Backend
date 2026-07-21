@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,10 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -48,17 +46,40 @@ public class ProductAdminServiceImpl implements ProductAdminService {
     private final CategoryRepository categoryRepository;
     private final ImageStorageService imageStorageService;
     private final WebSocketEventPublisher webSocketEventPublisher;
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
 
     //-----------------------
     // GET ALL PRODUCTS
     //-----------------------
     @Override
-    public GetAllProductsResponse getAllProducts(int page, int size) {
+    public GetAllProductsResponse getAllProducts(int page, int size,
+                                                 CategoryType categoryType,
+                                                 String categoryName,
+                                                 String keyword) {
         authorizationGuard.requireAdmin();
 
-        Pageable pageable = PaginationHelper.of(page, size);
-        Page<Product> products = productRepository.findAll(pageable);
+        Pageable pageable = PaginationHelper.of(page, size, Sort.by("createdAt").ascending());
+        Page<Product> products;
+
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+
+        if (hasKeyword) {
+            // Search by product name
+            products = productRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        } else {
+            if (categoryType == null) {
+                // All products
+                products = productRepository.findAll(pageable);
+            } else if (categoryName == null || categoryName.isBlank()) {
+                // FOOD or DRINK
+                products = productRepository.findByCategoryType(categoryType, pageable);
+            } else {
+                // FOOD + NOODLE
+                // DRINK + COFFEE
+                products = productRepository.findByCategoryTypeAndCategoryName(categoryType, categoryName, pageable);
+            }
+        }
 
         // BUILD LIST OF PRODUCT ITEMS
         List<GetAllProductsResponse.ProductItem> items =
@@ -169,7 +190,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid stock status"));
 
-        // Image
+        // Image needed
         if (image == null || image.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product image required");
         }
@@ -185,7 +206,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                 .category(category)
                 .stockStatus(stock)
                 .available(true)
-                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant())
+                .createdAt(ZonedDateTime.now(BUSINESS_TZ).toInstant())
                 .build();
 
         return productMapper.toProductItemResponseDto(productRepository.save(product));
@@ -253,7 +274,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
             product.setStockStatus(request.stockStatus());
         }
 
-        product.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant());
+        product.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
 
         Product saved = productRepository.save(product);
         var response = productMapper.toProductItemResponseDto(saved);
@@ -276,7 +297,7 @@ public class ProductAdminServiceImpl implements ProductAdminService {
         Product product = findProductById(id);
 
         product.setStockStatus(newStockStatus);
-        product.setUpdatedAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant());
+        product.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
         Product saved = productRepository.save(product);
 
         // WebSocket

@@ -8,17 +8,7 @@ import java.util.UUID;
 
 public interface UserService {
 
-    RegisterResponse createAccount(RegisterRequest request);
-
     LoginResponse login(LoginRequest request);
-
-    void setNewPassword (NewPasswordRequest request);
-
-    void disableUser (DisableUserRequest request);
-
-    void enableUser (EnableUserRequest request);
-
-    List<DisableUserResponse> getAllDisabledUsers ();
 
     UUID getCurrentUserId();
 

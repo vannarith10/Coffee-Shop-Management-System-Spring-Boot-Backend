@@ -43,17 +43,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final ImageStorageService imageStorageService;
     private final PasswordEncoder passwordEncoder;
     private final WebSocketEventPublisher webSocketEventPublisher;
+    private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
-
-    //--------------------------------
-    // GET ALL EMPLOYEE PROFILES
-    //--------------------------------
-    private static final Map<Role, Integer> ROLE_PRIORITY = Map.of(
-            Role.ADMIN, 1,
-            Role.CASHIER, 2,
-            Role.BARISTA, 3,
-            Role.STAFF, 4
-    );
 
 
     //=======================
@@ -112,7 +103,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .role(request.role())
                 .isActive(true)
                 .status(request.status())
-                .createdAt(ZonedDateTime.now(ZoneId.of("Asia/Phnom_Penh")).toInstant())
+                .createdAt(ZonedDateTime.now(BUSINESS_TZ).toInstant())
                 .shiftType(request.shift())
                 .schedules(request.schedules())
                 .imageKey(imageKey)
@@ -151,6 +142,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         applyImage(user, image);
+        user.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
 
         User savedUser = userRepository.save(user);
         GetAllEmployeeProfilesResponse.Employee response = userMapper.toEmployeeResponseDto(savedUser);

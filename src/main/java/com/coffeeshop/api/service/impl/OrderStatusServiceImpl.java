@@ -53,7 +53,7 @@ public class OrderStatusServiceImpl implements OrderStatusService {
     //----------------------------
     @Override
     public Order confirmAndSendToBarista(UUID orderId) {
-        User cashier = authorizationGuard.requireCashier();
+        authorizationGuard.requireCashier();
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
@@ -134,27 +134,14 @@ public class OrderStatusServiceImpl implements OrderStatusService {
             case DONE -> {
                 if (oldStatus != OrderStatus.PREPARING) throw new ResponseStatusException(HttpStatus.CONFLICT, "Only from PREPARING.");
                 order.setStatus(OrderStatus.DONE);
-                order.setDoneAt(now);
+                order.setDoneAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
             }
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PREPARING or DONE.");
         }
 
-        order.setUpdatedAt(now);
+        order.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
         Order saved = orderRepository.save(order);
 
-        // WS 1:
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    final OrderEvent event = new OrderEvent("order.update.status", saved.getId(), Map.of(
-                            "old_status", oldStatus.toString(),
-                            "new_status", saved.getStatus().toString()));
-
-                    @Override
-                    public void afterCommit() {
-                        webSocketEventPublisher.publishToBarista(event);
-                    }
-                }
-        );
 
         return UpdateOrderStatusResponse.builder()
                 .orderId(saved.getId())

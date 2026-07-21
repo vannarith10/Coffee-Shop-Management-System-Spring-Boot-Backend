@@ -23,7 +23,7 @@ public class MoneyHelper {
         return current.subtract(previous)
                 .divide(previous, 6, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100))
-                .setScale(2, RoundingMode.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
     }
 }

@@ -1,6 +1,7 @@
 package com.coffeeshop.api.repository;
 
 import com.coffeeshop.api.domain.Product;
+import com.coffeeshop.api.domain.enums.CategoryType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,5 +18,14 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     boolean existsByNameIgnoreCase(String name);
 
     Page<Product> findByAvailableTrue (Pageable pageable);
+
+    Page<Product> findByCategoryType (CategoryType categoryType, Pageable pageable);
+
+    Page<Product> findByCategoryTypeAndCategoryName (
+            CategoryType categoryType,
+            String categoryName,
+            Pageable pageable);
+
+    Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
 
 }

@@ -1,5 +1,6 @@
 package com.coffeeshop.api.service;
 
+import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.ProductStock;
 import com.coffeeshop.api.dto.adminDashboard.product.ProductStockStatusResponse;
 import com.coffeeshop.api.dto.adminDashboard.product.AddNewProductRequest;
@@ -11,7 +12,10 @@ import java.util.UUID;
 
 public interface ProductAdminService {
 
-    GetAllProductsResponse getAllProducts (int page, int size);
+    GetAllProductsResponse getAllProducts (int page, int size,
+                                           CategoryType categoryType,
+                                           String categoryName,
+                                           String keyword);
 
     GetAllProductsResponse.ProductItem getASingleProduct (UUID productId);
 

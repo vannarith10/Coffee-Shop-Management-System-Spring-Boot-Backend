@@ -120,8 +120,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
 
     // Helper
-    private Instant resolveStart(TopSellingProductTimeRange range, ZoneId zone) {
-        LocalDate now = LocalDate.now(zone);
+    private Instant resolveStart(TimeRange range, ZoneId zone) {
+        LocalDate now = ZonedDateTime.now(zone).toLocalDate();
         return switch (range) {
             case TODAY -> now.atStartOfDay(zone).toInstant();
             case THIS_WEEK -> now.with(DayOfWeek.MONDAY).atStartOfDay(zone).toInstant();

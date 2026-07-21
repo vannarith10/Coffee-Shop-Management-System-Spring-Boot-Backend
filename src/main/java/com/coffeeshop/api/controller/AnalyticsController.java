@@ -23,6 +23,7 @@ public class AnalyticsController {
 
     // ANALYTICS SUMMARY
     @GetMapping("/summary")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BusinessAnalyticsSummaryResponse> summary () {
         return ResponseEntity.ok(analyticsService.businessAnalyticsSummary());
     }
@@ -30,6 +31,7 @@ public class AnalyticsController {
 
     // TOP SELLING PRODUCT
     @PostMapping("/top-selling-products")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TopSellingProductResponse> topSelling (
             @Valid
             @RequestBody

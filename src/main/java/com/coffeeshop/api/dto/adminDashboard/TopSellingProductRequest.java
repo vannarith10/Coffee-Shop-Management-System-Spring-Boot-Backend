@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record TopSellingProductRequest(
 
         @JsonProperty("range")
-        TopSellingProductTimeRange range,
+        TimeRange range,
 
         @JsonProperty("page")
         Integer page,

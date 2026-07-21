@@ -41,7 +41,7 @@ public class EmployeeController {
     @PostMapping(value = "/create-account", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GetAllEmployeeProfilesResponse.Employee> addNewEmployee (
             @RequestPart("data")AddNewEmployeeRequest request,
-            @RequestPart(value = "image", required = false)MultipartFile image
+            @RequestPart(value = "image", required = false) MultipartFile image
             ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(employeeService.addNewEmployee(request, image));
     }

@@ -34,8 +34,6 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     private final CategoryRepository categoryRepository;
-    private final UserService userService;
-    private final UserRepository userRepository;
     private final AuthorizationGuard authorizationGuard;
     private final CategoryMapper categoryMapper;
     private final WebSocketEventPublisher webSocketEventPublisher;
@@ -47,21 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
-
-        // Get user
-        User user = userRepository.findById(userService.getCurrentUserId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "User not found."
-                ));
-
-        // Role check
-        if (!user.getRole().equals(Role.ADMIN)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Only ADMIN can create category"
-            );
-        }
+        authorizationGuard.requireAdmin();
 
         // Validation
         if (request.type() == null) {
@@ -95,11 +79,8 @@ public class CategoryServiceImpl implements CategoryService {
             );
         }
 
-        if (categoryRepository.existsByTypeAndName(categoryType, normalizedName)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Category already exists"
-            );
+        if (categoryRepository.existsByName(normalizedName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name already exists");
         }
 
         Category category = Category.builder()
@@ -119,14 +100,14 @@ public class CategoryServiceImpl implements CategoryService {
                 .build();
         webSocketEventPublisher.publishCategoryCreateToAdmins(response);
 
-        // WebSocket | Send Status
+        // WebSocket | Send Summary Status
         var status = CategoryStatusResponse.builder()
                 .totalCategories(categoryRepository.count())
                 .totalDrinks(categoryRepository.countByType(CategoryType.DRINK))
                 .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
                 .totalDisables(categoryRepository.countByActiveFalse())
                 .build();
-        webSocketEventPublisher.publishCategoryStatusToAdmins(status);
+        webSocketEventPublisher.publishCategoryStatusSummaryToAdmins(status);
 
         return response;
     }
@@ -201,7 +182,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
                 .totalDisables(categoryRepository.countByActiveFalse())
                 .build();
-        webSocketEventPublisher.publishCategoryStatusToAdmins(res);
+        webSocketEventPublisher.publishCategoryStatusSummaryToAdmins(res);
 
         return response;
     }
@@ -213,7 +194,7 @@ public class CategoryServiceImpl implements CategoryService {
     // Get all Categories
     //=============================
     @Override
-    public GetAllCategoriesResponse getAllCategoies(int page, int size) {
+    public GetAllCategoriesResponse getAllCategories(int page, int size) {
         authorizationGuard.requireAdmin();
 
         Pageable pageable = PaginationHelper.of(page, size);
@@ -242,47 +223,15 @@ public class CategoryServiceImpl implements CategoryService {
 
 
 
+
+    // ==============================
+    // Get Category names only
+    // ==============================
     @Override
-    public CategoryResponse updateName(UUID id, String newName) {
-        return null;
+    public List<CategoryNameAndTypeResponse> getAllCategoryNames() {
+        authorizationGuard.requireAdmin();
+        return categoryRepository.findAllNamesAndTypes();
     }
-
-
-
-
-
-    @Override
-    public void activate(UUID id) {
-
-    }
-
-
-
-
-
-    @Override
-    public void deactivate(UUID id) {
-
-    }
-
-
-
-
-
-    @Override
-    public List<CategoryResponse> getActiveCategories() {
-        return List.of();
-    }
-
-
-
-
-
-    @Override
-    public Category getById(UUID id) {
-        return null;
-    }
-
 
 
 

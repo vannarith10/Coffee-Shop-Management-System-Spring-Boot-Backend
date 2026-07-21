@@ -10,21 +10,12 @@ public interface CategoryService {
 
     CategoryResponse createCategory(CreateCategoryRequest request);
 
-    GetAllCategoriesResponse getAllCategoies (int page, int size);
+    GetAllCategoriesResponse getAllCategories (int page, int size);
 
     CategoryResponse patchCategory (UUID categoryId, PatchCategoryRequest request);
 
     CategoryStatusResponse getCategoryStatus ();
 
-
-    CategoryResponse updateName(UUID id, String newName);
-
-    void activate(UUID id);
-
-    void deactivate(UUID id);
-
-    List<CategoryResponse> getActiveCategories();
-
-    Category getById(UUID id);
+    List<CategoryNameAndTypeResponse> getAllCategoryNames ();
 
 }
