@@ -7,6 +7,7 @@ import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.service.ShopProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,10 +44,21 @@ public class ShopProfileController {
 
 
 
-    // GET SHOP NAME & LOGO FOR ALL
+    // GET SHOP NAME & LOGO
+    // Allowed all
     @GetMapping("/shop-name/shop-image")
     public ResponseEntity<GetShopNameAndImage> getShopNameAndImage () {
         return ResponseEntity.ok(shopProfileService.getShopNameAndImage());
+    }
+
+
+
+    // Delete Shop Logo
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/delete-logo")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deleteLogo () {
+        shopProfileService.deleteShopLogo();
     }
 
 }

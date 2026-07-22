@@ -13,4 +13,6 @@ public interface ShopProfileService {
 
     GetShopNameAndImage getShopNameAndImage ();
 
+    void deleteShopLogo ();
+
 }

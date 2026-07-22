@@ -110,4 +110,27 @@ public class ShopProfileServiceImpl implements ShopProfileService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload image.", ex);
         }
     }
+
+
+
+    // ===========================
+    // Delete Shop Logo
+    // ===========================
+    @Override
+    @Transactional
+    public void deleteShopLogo() {
+        User admin = authorizationGuard.requireAdmin();
+        ShopProfile profile = admin.getShopProfile();
+        if (profile == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop profile not found");
+        }
+
+        String imageKey = profile.getImageKey();
+        if (imageKey == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop logo does not exist");
+        }
+
+        imageStorageService.delete(imageKey);
+        profile.setImageKey(null);
+    }
 }
