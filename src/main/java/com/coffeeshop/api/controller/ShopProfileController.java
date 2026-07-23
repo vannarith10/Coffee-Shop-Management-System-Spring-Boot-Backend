@@ -3,6 +3,7 @@ package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
 import com.coffeeshop.api.dto.adminDashboard.setting.GetShopProfile;
+import com.coffeeshop.api.dto.adminDashboard.setting.ShopLogoUpdateResponse;
 import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.service.ShopProfileService;
 import jakarta.validation.Valid;
@@ -51,6 +52,15 @@ public class ShopProfileController {
         return ResponseEntity.ok(shopProfileService.getShopNameAndImage());
     }
 
+
+    // consumes = MediaType.MULTIPART_FORM_DATA_VALUE ==>> Content-Type: multipart/form-data
+    // "This endpoint only accepts requests with Content-Type: multipart/form-data."
+    @PutMapping(value = "/update-logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ShopLogoUpdateResponse> updateShopLogo (
+            @RequestPart("image") MultipartFile image
+    ) {
+        return ResponseEntity.ok(shopProfileService.updateShopLogo(image));
+    }
 
 
     // Delete Shop Logo

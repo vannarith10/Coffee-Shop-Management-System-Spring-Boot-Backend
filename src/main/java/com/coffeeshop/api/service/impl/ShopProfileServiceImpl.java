@@ -4,6 +4,7 @@ import com.coffeeshop.api.domain.ShopProfile;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.dto.adminDashboard.setting.GetShopNameAndImage;
 import com.coffeeshop.api.dto.adminDashboard.setting.GetShopProfile;
+import com.coffeeshop.api.dto.adminDashboard.setting.ShopLogoUpdateResponse;
 import com.coffeeshop.api.dto.adminDashboard.setting.UpdateShopProfileRequest;
 import com.coffeeshop.api.mapper.ShopProfileMapper;
 import com.coffeeshop.api.minio.ImageStorageService;
@@ -12,6 +13,7 @@ import com.coffeeshop.api.security.AuthorizationGuard;
 import com.coffeeshop.api.service.ShopProfileService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +25,7 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ShopProfileServiceImpl implements ShopProfileService {
 
 
@@ -72,9 +75,12 @@ public class ShopProfileServiceImpl implements ShopProfileService {
             String oldKey = profile.getImageKey();
             String newKey = uploadImage(image, imageStorageService.shopProfileFolder());
             profile.setImageKey(newKey);
-            if (oldKey != null) {
-                try { imageStorageService.delete(oldKey); }
-                catch (Exception e) { /* log warning */ }
+            try {
+                if (oldKey != null) {
+                    imageStorageService.delete(oldKey);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to delete old image {}", oldKey, e);
             }
         }
 
@@ -110,6 +116,52 @@ public class ShopProfileServiceImpl implements ShopProfileService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload image.", ex);
         }
     }
+
+
+
+
+    // =================================
+    // Update Shop Logo
+    // =================================
+    @Transactional
+    @Override
+    public ShopLogoUpdateResponse updateShopLogo(MultipartFile image) {
+        User admin = authorizationGuard.requireAdmin();
+
+        if (image == null || image.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image is required");
+        }
+
+        ShopProfile shop = admin.getShopProfile();
+        if (shop == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Shop not found");
+        }
+
+        String oldKey = shop.getImageKey();
+        String newKey = uploadImage(image, imageStorageService.shopProfileFolder());
+
+        try {
+            shop.setImageKey(newKey);
+
+            // delete old
+            try {
+                if (oldKey != null) {
+                    imageStorageService.delete(oldKey);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to delete old image {}", oldKey, e);
+            }
+
+            return ShopLogoUpdateResponse.builder()
+                    .imageUrl(imageStorageService.getImageUrl(newKey))
+                    .build();
+
+        } catch (Exception ex) {
+            imageStorageService.delete(newKey);
+            throw ex;
+        }
+    }
+
 
 
 
