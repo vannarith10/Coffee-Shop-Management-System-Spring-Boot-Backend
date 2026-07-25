@@ -21,6 +21,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -80,9 +82,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
-    //------------------------
+    // ================================
     // ADD NEW EMPLOYEE
-    //------------------------
+    // ================================
     @Transactional
     @Override
     public GetAllEmployeeProfilesResponse.Employee addNewEmployee(AddNewEmployeeRequest request, MultipartFile image) {
@@ -109,7 +111,10 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .imageKey(imageKey)
                 .build();
 
-        return userMapper.toEmployeeResponseDto(userRepository.save(user));
+        var response = userMapper.toEmployeeResponseDto(userRepository.save(user));
+        webSocketEventPublisher.publishCreateStaffToAdmins(response);
+
+        return response;
     }
 
 
@@ -234,4 +239,33 @@ public class EmployeeServiceImpl implements EmployeeService {
         user.setPassword(passwordEncoder.encode(password.trim()));
     }
 
+
+
+
+
+    // ==============================
+    // Delete Profile
+    // ==============================
+    @Transactional
+    @Override
+    public void deleteProfile(UUID id) {
+        authorizationGuard.requireAdmin();
+
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+        );
+
+        String key = user.getImageKey();
+
+        userRepository.delete(user);
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        imageStorageService.delete(key);
+                    }
+                }
+        );
+    }
 }

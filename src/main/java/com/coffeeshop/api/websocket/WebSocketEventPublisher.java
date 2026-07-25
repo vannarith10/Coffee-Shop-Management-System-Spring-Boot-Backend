@@ -50,4 +50,10 @@ public class WebSocketEventPublisher {
         simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/product-update", event);
     }
 
+
+    // Staff Create
+    public void publishCreateStaffToAdmins (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/staff-create", event);
+    }
+
 }

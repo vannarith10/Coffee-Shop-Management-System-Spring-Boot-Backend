@@ -25,9 +25,9 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
 
-
     // GET ALL EMPLOYEE PROFILES
     @GetMapping("/profiles")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GetAllEmployeeProfilesResponse> getEmployeeProfiles (
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
@@ -39,6 +39,7 @@ public class EmployeeController {
 
     // CREATE EMPLOYEE PROFILE
     @PostMapping(value = "/create-account", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GetAllEmployeeProfilesResponse.Employee> addNewEmployee (
             @RequestPart("data")AddNewEmployeeRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
@@ -50,11 +51,23 @@ public class EmployeeController {
 
     // PATCH EMPLOYEE
     @PatchMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<GetAllEmployeeProfilesResponse.Employee> patchEmployee (
             @PathVariable UUID id,
             @RequestPart(required = false, value = "data") @Valid EditStaffRequest request,
             @RequestPart(required = false, value = "image") MultipartFile image
             ) {
         return ResponseEntity.ok(employeeService.editEmployeeDetail(id, request, image));
+    }
+
+
+
+    @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProfile (
+            @PathVariable UUID id
+    ) {
+        employeeService.deleteProfile(id);
+        return ResponseEntity.noContent().build();
     }
 }

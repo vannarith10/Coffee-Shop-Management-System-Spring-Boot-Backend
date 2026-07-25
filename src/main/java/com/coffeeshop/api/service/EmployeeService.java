@@ -15,4 +15,5 @@ public interface EmployeeService {
 
     GetAllEmployeeProfilesResponse.Employee editEmployeeDetail (UUID id, EditStaffRequest request, MultipartFile image);
 
+    void deleteProfile (UUID id);
 }
