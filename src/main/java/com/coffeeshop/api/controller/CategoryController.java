@@ -59,7 +59,7 @@ public class CategoryController {
 
 
     @GetMapping("/names")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CASHIER')")
     public ResponseEntity<List<CategoryNameAndTypeResponse>> getAllNames () {
         return ResponseEntity.ok(categoryService.getAllCategoryNames());
     }

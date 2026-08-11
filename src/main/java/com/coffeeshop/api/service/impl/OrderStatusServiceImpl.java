@@ -1,9 +1,11 @@
 package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.Order;
+import com.coffeeshop.api.domain.OrderItem;
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.dto.adminDashboard.BusinessAnalyticsSummaryResponse;
+import com.coffeeshop.api.dto.order.GetCreatedOrderResponse;
 import com.coffeeshop.api.dto.order.OrderEvent;
 import com.coffeeshop.api.dto.order.PerformanceMetricsResponse;
 import com.coffeeshop.api.dto.order.UpdateOrderStatusResponse;
@@ -62,7 +64,7 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 || order.getStatus() == OrderStatus.PREPARING
                 || order.getStatus() == OrderStatus.DONE
         )   {
-            return order;
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Order already confirmed");
         }
 
         if (order.getStatus() != OrderStatus.CREATED) {
@@ -150,6 +152,47 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 .build();
     }
 
+
+
+
+
+    /**
+     * Builds the order confirmation summary for a newly created order.
+     *
+     * The cashier uses this information to validate that the order was
+     * successfully created and that all financial and item totals are
+     * correct before continuing the workflow.
+     *
+     * Business Rules:
+     * - Only cashiers are allowed to access this information.
+     * - The order must exist; otherwise a 404 NOT_FOUND error is returned.
+     * - Total units represent the sum of quantities across all order items.
+     * - Total items represent the number of distinct order lines.
+     *
+     * @param orderId Unique identifier of the order.
+     * @return Order summary for display on the cashier confirmation screen.
+     * @throws ResponseStatusException If the order cannot be found.
+     */
+    @Override
+    public GetCreatedOrderResponse getCreatedOrder(UUID orderId) {
+        authorizationGuard.requireCashier();
+
+        Order order = orderRepository.findById(orderId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found")
+        );
+
+        Integer units = order.getItems().stream().mapToInt(OrderItem::getQuantity).sum();
+
+        return GetCreatedOrderResponse.builder()
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .paymentMethod(order.getPaymentMethod())
+                .orderStatus(order.getStatus())
+                .totalPrice(order.getTotalAmount())
+                .totalItems(order.getItems().size())
+                .totalUnits(units)
+                .build();
+    }
 }
 
 

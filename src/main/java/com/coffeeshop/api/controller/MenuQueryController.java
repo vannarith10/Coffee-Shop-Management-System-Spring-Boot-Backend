@@ -1,6 +1,8 @@
 package com.coffeeshop.api.controller;
 
 
+import com.coffeeshop.api.domain.enums.CategoryType;
+import com.coffeeshop.api.dto.product.GetProductMenu;
 import com.coffeeshop.api.dto.product.MenuItemsResponse;
 import com.coffeeshop.api.service.ProductCatalogService;
 import lombok.RequiredArgsConstructor;
@@ -22,10 +24,23 @@ public class MenuQueryController {
 
 
 
+    // Menu
     // FOR CASHIER AND ADMIN
     @GetMapping
-    public ResponseEntity<List<MenuItemsResponse>> getMenu () {
-        return ResponseEntity.ok(productCatalogService.getMenuItems());
+    public ResponseEntity<GetProductMenu> getMenu (
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+
+            @RequestParam(value = "category_type", required = false) CategoryType categoryType,
+            @RequestParam(value = "category_name", required = false) String categoryName,
+            @RequestParam(value = "keyword", required = false) String keyword
+    ) {
+        return ResponseEntity.ok(productCatalogService.getMenu(
+                page,
+                size,
+                categoryType,
+                categoryName,
+                keyword));
     }
 
 

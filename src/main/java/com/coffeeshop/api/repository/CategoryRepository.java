@@ -37,6 +37,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     @Query("""
         SELECT new com.coffeeshop.api.dto.category.CategoryNameAndTypeResponse(
+                c.id,
                 c.name,
                 c.type
             )

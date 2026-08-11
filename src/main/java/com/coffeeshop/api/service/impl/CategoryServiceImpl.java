@@ -225,11 +225,11 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     // ==============================
-    // Get Category names only
+    // Get Category names & type only
     // ==============================
     @Override
     public List<CategoryNameAndTypeResponse> getAllCategoryNames() {
-        authorizationGuard.requireAdmin();
+        authorizationGuard.requireAnyRoles(Role.ADMIN, Role.CASHIER);
         return categoryRepository.findAllNamesAndTypes();
     }
 

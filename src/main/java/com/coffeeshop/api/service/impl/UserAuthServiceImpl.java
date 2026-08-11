@@ -7,6 +7,7 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Status;
 import com.coffeeshop.api.dto.auth.LoginRequest;
 import com.coffeeshop.api.dto.auth.LoginResponse;
+import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
 import com.coffeeshop.api.repository.UserRepository;
 import com.coffeeshop.api.security.CustomUserDetails;
@@ -38,7 +39,7 @@ public class UserAuthServiceImpl implements UserAuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
-
+    private final ImageStorageService imageStorageService;
 
 
     //---------------
@@ -91,6 +92,7 @@ public class UserAuthServiceImpl implements UserAuthService {
                     .id(user.getId())
                     .username(user.getUsername())
                     .role(user.getRole())
+                    .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
                     .build();
 
             LoginResponse.Refresh refresh = LoginResponse.Refresh.builder()

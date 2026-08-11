@@ -7,6 +7,7 @@ import com.coffeeshop.api.domain.enums.Status;
 import com.coffeeshop.api.dto.auth.LoginResponse;
 import com.coffeeshop.api.dto.auth.RefreshAccessTokenResponse;
 import com.coffeeshop.api.helper.RefreshTokenHelper;
+import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
 import com.coffeeshop.api.service.AuthTokenService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
 
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
-
+    private final ImageStorageService imageStorageService;
 
 
     @Transactional
@@ -101,6 +102,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                         .id(user.getId())
                         .username(user.getUsername())
                         .role(user.getRole())
+                        .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
                         .build();
 
         // Return response with refresh info
@@ -143,6 +145,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .role(user.getRole())
+                .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
                 .build();
 
         LoginResponse.Refresh refresh = LoginResponse.Refresh.builder()

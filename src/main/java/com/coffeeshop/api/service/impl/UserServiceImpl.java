@@ -6,8 +6,10 @@ import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
 import com.coffeeshop.api.dto.*;
 import com.coffeeshop.api.dto.auth.*;
+import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.RefreshTokenRepository;
 import com.coffeeshop.api.repository.UserRepository;
+import com.coffeeshop.api.security.AuthorizationGuard;
 import com.coffeeshop.api.security.CustomUserDetails;
 import com.coffeeshop.api.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -42,83 +44,8 @@ import java.util.regex.Pattern;
 public class UserServiceImpl implements UserService {
 
 
-    private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
-    private final RefreshTokenRepository refreshTokenRepository;
-
-
-
-    // ========================= LOGIN ========================= //
-    @Transactional
-    @Override
-    public LoginResponse login(LoginRequest request) {
-        if (request == null || !StringUtils.hasText(request.username()) || !StringUtils.hasText(request.password())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password must not be blank");
-        }
-
-        final String normalizedUsername = request.username().trim().toLowerCase();
-
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(normalizedUsername, request.password())
-            );
-
-            User user = userRepository.findByUsernameIgnoreCase(normalizedUsername)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
-
-            if (!user.isActive()) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is disabled");
-            }
-
-            // Remove old refresh tokens
-            refreshTokenRepository.deleteByUser_Id(user.getId());
-            refreshTokenRepository.flush();
-
-            String accessToken = jwtService.generateAccessToken(user);
-            String refreshToken = jwtService.generateRefreshToken(user);
-            long expiresInSeconds = jwtService.getExpiresInSeconds();
-            Instant expiresRefresh = jwtService.getRefreshExpiryInstant();
-
-            refreshTokenRepository.save(
-                    RefreshToken.builder()
-                            .token(refreshToken)
-                            .user(user)
-                            .expiresAt(expiresRefresh)
-                            .revoked(false)
-                            .build()
-            );
-
-            return new LoginResponse(
-                    accessToken,
-                    "Bearer",
-                    expiresInSeconds,
-                    new LoginResponse.Refresh(
-                            refreshToken,
-                            expiresRefresh
-                    ),
-                    new LoginResponse.UserInfo(
-                            user.getId(),
-                            user.getUsername(),
-                            user.getRole()
-                    )
-            );
-
-        } catch (DisabledException ex) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is disabled");
-        } catch (BadCredentialsException ex) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
-        } catch (ResponseStatusException ex) {
-            throw ex; // propagate our own specific errors
-        } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to process login");
-        }
-    }
-
-
-
-
-
+    private final AuthorizationGuard authorizationGuard;
+    private final ImageStorageService imageStorageService;
 
     // ==================== GET CURRENT USER ID ==================== //
     @Override
@@ -156,6 +83,23 @@ public class UserServiceImpl implements UserService {
         return authentication.getName(); // comes from UserDetails.getUsername()
     }
 
+
+
+
+
+
+    @Override
+    public GetUserProfile getProfile() {
+        User user = authorizationGuard.requireAnyRoles(Role.ADMIN, Role.CASHIER, Role.BARISTA);
+
+        return GetUserProfile.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
+                .role(user.getRole())
+                .build();
+    }
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////

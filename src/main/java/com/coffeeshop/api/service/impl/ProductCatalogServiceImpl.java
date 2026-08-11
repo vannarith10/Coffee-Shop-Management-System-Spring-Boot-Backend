@@ -2,8 +2,12 @@ package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.Product;
 import com.coffeeshop.api.domain.User;
+import com.coffeeshop.api.domain.enums.CategoryType;
 import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.dto.Pagination;
+import com.coffeeshop.api.dto.product.GetProductMenu;
 import com.coffeeshop.api.dto.product.MenuItemsResponse;
+import com.coffeeshop.api.helper.PaginationHelper;
 import com.coffeeshop.api.minio.ImageStorageService;
 import com.coffeeshop.api.repository.ProductRepository;
 import com.coffeeshop.api.security.AuthorizationGuard;
@@ -11,6 +15,7 @@ import com.coffeeshop.api.service.ProductCatalogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -29,14 +34,53 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
 
 
 
-    //-----------------
-    // GET MENU
-    //-----------------
+    // ===========================
+    // GET Menu Items
+    // ===========================
     @Override
-    public List<MenuItemsResponse> getMenuItems() {
-        User user = authorizationGuard.requireAnyRoles(Role.CASHIER, Role.ADMIN);
-        List<Product> products = productRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
-        return products.stream().map(this::toMenuItem).toList();
+    public GetProductMenu getMenu (int page, int size,
+                                       CategoryType categoryType,
+                                       String categoryName,
+                                       String keyword) {
+        authorizationGuard.requireAnyRoles(Role.CASHIER, Role.ADMIN);
+
+        Pageable pageable = PaginationHelper.of(page, size, Sort.by("createdAt").ascending());
+        Page<Product> products;
+
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+
+        if (hasKeyword) {
+            // Search by product name
+            products = productRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        } else {
+            if (categoryType == null) {
+                // All products
+                products = productRepository.findAll(pageable);
+            } else if (categoryName == null || categoryName.isBlank()) {
+                // FOOD or DRINK
+                products = productRepository.findByCategoryType(categoryType, pageable);
+            } else {
+                // FOOD + NOODLE
+                // DRINK + COFFEE
+                products = productRepository.findByCategoryTypeAndCategoryName(categoryType, categoryName, pageable);
+            }
+        }
+
+        List<MenuItemsResponse> items = products.getContent().stream()
+                .map(this::toMenuItem)
+                .toList();
+
+        var pagination = Pagination.builder()
+                .page(pageable.getPageNumber() + 1)
+                .size(pageable.getPageSize())
+                .totalPages(products.getTotalPages())
+                .totalItems(products.getTotalElements())
+                .build();
+
+        return GetProductMenu.builder()
+                .pagination(pagination)
+                .items(items)
+                .build();
     }
 
     // Mapper

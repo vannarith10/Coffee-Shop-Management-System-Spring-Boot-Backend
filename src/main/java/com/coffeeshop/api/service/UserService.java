@@ -8,10 +8,10 @@ import java.util.UUID;
 
 public interface UserService {
 
-    LoginResponse login(LoginRequest request);
-
     UUID getCurrentUserId();
 
     String getCurrentUsername();
+
+    GetUserProfile getProfile ();
 
 }

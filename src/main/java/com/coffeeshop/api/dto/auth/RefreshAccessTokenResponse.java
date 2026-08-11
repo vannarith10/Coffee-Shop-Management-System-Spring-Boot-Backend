@@ -35,7 +35,10 @@ public record RefreshAccessTokenResponse(
             String username,
 
             @JsonProperty("role")
-            Role role
+            Role role,
+
+            @JsonProperty("image_url")
+            String imageUrl
     ) {}
 
 
