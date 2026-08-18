@@ -37,7 +37,6 @@ public class ProductAdminController {
     public ResponseEntity<GetAllProductsResponse> getProducts (
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-
             @RequestParam(value = "category_type", required = false)CategoryType categoryType,
             @RequestParam(value = "category_name", required = false) String categoryName,
             @RequestParam(value = "keyword", required = false) String keyword

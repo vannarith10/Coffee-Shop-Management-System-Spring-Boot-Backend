@@ -1,6 +1,10 @@
 package com.coffeeshop.api.controller;
 
 
+import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.domain.enums.Schedule;
+import com.coffeeshop.api.domain.enums.ShiftType;
+import com.coffeeshop.api.domain.enums.Status;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.GetAllEmployeeProfilesResponse;
@@ -14,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,6 +26,7 @@ import java.util.UUID;
 @RequestMapping("/api/v2/employee")
 @PreAuthorize("hasRole('ADMIN')")
 public class EmployeeController {
+
 
     private final EmployeeService employeeService;
 
@@ -50,15 +56,38 @@ public class EmployeeController {
 
 
     // PATCH EMPLOYEE
-    @PatchMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping( value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<GetAllEmployeeProfilesResponse.Employee> patchEmployee (
+    public ResponseEntity<Void> patchEmployee (
             @PathVariable UUID id,
-            @RequestPart(required = false, value = "data") @Valid EditStaffRequest request,
-            @RequestPart(required = false, value = "image") MultipartFile image
+            @RequestParam (required = false) String name,
+            @RequestParam (required = false) String username,
+            @RequestParam (required = false) String password,
+            @RequestParam (required = false) String email,
+            @RequestParam (required = false) Role role,
+            @RequestParam (required = false) Status status,
+            @RequestParam (required = false)ShiftType shiftType,
+            @RequestParam (required = false)List<Schedule> schedules,
+            @RequestParam (required = false) MultipartFile image
             ) {
-        return ResponseEntity.ok(employeeService.editEmployeeDetail(id, request, image));
+
+        employeeService.editEmployeeDetail(
+                id,
+                new EditStaffRequest(
+                        name,
+                        username,
+                        password,
+                        email,
+                        role,
+                        status,
+                        shiftType,
+                        schedules
+                ),
+                image
+        );
+        return ResponseEntity.ok().build();
     }
+
 
 
 

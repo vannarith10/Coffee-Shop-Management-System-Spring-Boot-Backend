@@ -93,7 +93,8 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
                 .description(p.getDescription())
                 .categoryType(p.getCategory().getType())
                 .categoryName(p.getCategory().getName())
-                .inStock(p.isAvailable())
+                .isAvailable(p.isAvailable())
+                .stockStatus(p.getStockStatus())
                 .build();
     }
 
@@ -117,7 +118,8 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
                         .description(pro.getDescription())
                         .categoryType(pro.getCategory().getType())
                         .categoryName(pro.getCategory().getName())
-                        .inStock(pro.isAvailable())
+                        .isAvailable(pro.isAvailable())
+                        .stockStatus(pro.getStockStatus())
                         .build());
     }
 

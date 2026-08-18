@@ -22,6 +22,9 @@ public record EditStaffRequest(
         @JsonProperty("password")
         String password,
 
+        @JsonProperty("email")
+        String email,
+
         @JsonProperty("role")
         Role role,
 

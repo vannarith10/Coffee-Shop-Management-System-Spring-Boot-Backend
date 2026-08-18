@@ -25,6 +25,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByRole(Role role);
 
+    boolean existsByEmail (String email);
+
     List<User> findByRole(Role role);
 
     List<User> findAllByRole(Role role);
@@ -38,7 +40,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
                 WHEN 'CASHIER' THEN 2
                 WHEN 'BARISTA' THEN 3
                 WHEN 'STAFF' THEN 4
-            END
+            END,
+            u.createdAt ASC
     """)
     Page<User> findAllByRolePriority (Pageable pageable);
 

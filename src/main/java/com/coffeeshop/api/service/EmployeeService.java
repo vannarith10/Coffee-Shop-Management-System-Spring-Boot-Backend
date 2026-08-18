@@ -13,7 +13,7 @@ public interface EmployeeService {
 
     GetAllEmployeeProfilesResponse.Employee addNewEmployee (AddNewEmployeeRequest request, MultipartFile image);
 
-    GetAllEmployeeProfilesResponse.Employee editEmployeeDetail (UUID id, EditStaffRequest request, MultipartFile image);
+    void editEmployeeDetail (UUID id, EditStaffRequest request, MultipartFile image);
 
     void deleteProfile (UUID id);
 }

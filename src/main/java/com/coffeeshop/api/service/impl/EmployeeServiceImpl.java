@@ -2,6 +2,9 @@ package com.coffeeshop.api.service.impl;
 
 import com.coffeeshop.api.domain.User;
 import com.coffeeshop.api.domain.enums.Role;
+import com.coffeeshop.api.domain.enums.Schedule;
+import com.coffeeshop.api.domain.enums.ShiftType;
+import com.coffeeshop.api.domain.enums.Status;
 import com.coffeeshop.api.dto.Pagination;
 import com.coffeeshop.api.dto.adminDashboard.staff.AddNewEmployeeRequest;
 import com.coffeeshop.api.dto.adminDashboard.staff.EditStaffRequest;
@@ -28,10 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -124,39 +124,63 @@ public class EmployeeServiceImpl implements EmployeeService {
     //----------------------------
     @Transactional
     @Override
-    public GetAllEmployeeProfilesResponse.Employee editEmployeeDetail(UUID id, EditStaffRequest request, MultipartFile image) {
+    public void editEmployeeDetail(
+            UUID id,
+            EditStaffRequest request,
+            MultipartFile image
+    ) {
         authorizationGuard.requireAdmin();
 
-        User user = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "User not found"
-        ));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "User not found"
+                ));
 
         boolean noFields = request == null || isAllBlank(request);
+
         if (noFields && (image == null || image.isEmpty())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one field must be provided.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "At least one field must be provided."
+            );
         }
+
+        boolean changed = false;
 
         if (request != null) {
-            applyName(user, request.name());
-            applyUsername(user, request.username());
-            applyPassword(user, request.password());
-            if (request.role() != null) user.setRole(request.role());
-            if (request.status() != null) user.setStatus(request.status());
-            if (request.shiftType() != null) user.setShiftType(request.shiftType());
-            if (request.schedules() != null && !request.schedules().isEmpty()) user.setSchedules(request.schedules());
+            changed |= applyName(user, request.name());
+            changed |= applyUsername(user, request.username());
+            changed |= applyPassword(user, request.password());
+            changed |= applyEmail(user, request.email());
+            changed |= applyRole(user, request.role());
+            changed |= applyStatus(user, request.status());
+            changed |= applyShiftType(user, request.shiftType());
+            changed |= applySchedule(user, request.schedules());
         }
 
-        applyImage(user, image);
-        user.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
+        changed |= applyImage(user, image);
+
+        if (!changed) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "No changes detected"
+            );
+        }
+
+        user.setUpdatedAt(
+                ZonedDateTime.now(BUSINESS_TZ).toInstant()
+        );
 
         User savedUser = userRepository.save(user);
-        GetAllEmployeeProfilesResponse.Employee response = userMapper.toEmployeeResponseDto(savedUser);
 
-        // WebSocket
+        // build response
+        GetAllEmployeeProfilesResponse.Employee response =
+                userMapper.toEmployeeResponseDto(savedUser);
+
         webSocketEventPublisher.publishEmployeeUpdateToAllAdmins(response);
-
-        return response;
     }
+
 
 
     //===================================
@@ -197,8 +221,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     // UPLOAD NEW IMAGE AND DELETE OLD
-    private void applyImage(User user, MultipartFile image) {
-        if (image == null || image.isEmpty()) return;
+    private boolean applyImage (User user, MultipartFile image) {
+        if (image == null || image.isEmpty()) return false;
         String oldKey = user.getImageKey();
         String newKey = uploadEmployeeImage(image);
         user.setImageKey(newKey);
@@ -206,39 +230,161 @@ public class EmployeeServiceImpl implements EmployeeService {
             try { imageStorageService.delete(oldKey); }
             catch (Exception e) { /* log warning */ }
         }
+        return true;
     }
 
     // BLANK CHECK
-    private boolean isAllBlank(EditStaffRequest r) {
-        return r.name() == null && r.username() == null && r.password() == null
-                && r.role() == null && r.status() == null && r.shiftType() == null
+    private boolean isAllBlank (EditStaffRequest r) {
+        return r.name() == null
+                && r.username() == null
+                && r.password() == null
+                && r.email() == null
+                && r.role() == null
+                && r.status() == null
+                && r.shiftType() == null
                 && (r.schedules() == null || r.schedules().isEmpty());
     }
 
     // NAME
-    private void applyName(User user, String name) {
-        if (name != null && !name.isBlank()) user.setName(name.trim());
+    private boolean applyName(User user, String name) {
+        if (name == null || name.isBlank()) {
+            return false;
+        }
+
+        String newName = name.trim();
+
+        if (Objects.equals(user.getName(), newName)) {
+            return false;
+        }
+
+        user.setName(newName);
+        return true;
     }
 
     // USERNAME
-    private void applyUsername(User user, String username) {
-        if (username == null || username.isBlank()) return;
-        String newU = username.trim().toLowerCase();
-        if (!newU.equals(user.getUsername()) && userRepository.existsByUsername(newU)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists.");
+    private boolean applyUsername(User user, String username) {
+        if (username == null || username.isBlank()) {
+            return false;
         }
-        user.setUsername(newU);
+
+        String newUsername = username.trim().toLowerCase();
+
+        if (Objects.equals(user.getUsername(), newUsername)) {
+            return false;
+        }
+
+        if (userRepository.existsByUsername(newUsername)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Username already exists."
+            );
+        }
+
+        user.setUsername(newUsername);
+        return true;
     }
+
 
     // PASSWORD
-    private void applyPassword(User user, String password) {
-        if (password == null || password.isBlank()) return;
-        if (!password.trim().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$")) {
+    private boolean applyPassword(User user, String password) {
+        if (password == null || password.isBlank()) {
+            return false;
+        }
+
+        String newPassword = password.trim();
+
+        if (!newPassword.matches(
+                "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$")) {
             throw badRequest("Weak password");
         }
-        user.setPassword(passwordEncoder.encode(password.trim()));
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            return false;
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        return true;
     }
 
+    // Email
+    private boolean applyEmail(User user, String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+
+        String newEmail = email.trim().toLowerCase();
+
+        if (Objects.equals(user.getEmail(), newEmail)) {
+            return false;
+        }
+
+        if (userRepository.existsByEmail(newEmail)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Email already exists."
+            );
+        }
+
+        user.setEmail(newEmail);
+        return true;
+    }
+
+    // Role
+    private boolean applyRole(User user, Role role) {
+        if (role == null) {
+            return false;
+        }
+
+        if (Objects.equals(user.getRole(), role)) {
+            return false;
+        }
+
+        user.setRole(role);
+        return true;
+    }
+
+    // Status
+    private boolean applyStatus(User user, Status status) {
+        if (status == null) {
+            return false;
+        }
+
+        if (Objects.equals(user.getStatus(), status)) {
+            return false;
+        }
+
+        user.setStatus(status);
+        return true;
+    }
+
+    // Shift
+    private boolean applyShiftType(User user, ShiftType shiftType) {
+        if (shiftType == null) {
+            return false;
+        }
+
+        if (Objects.equals(user.getShiftType(), shiftType)) {
+            return false;
+        }
+
+        user.setShiftType(shiftType);
+        return true;
+    }
+
+    // Schedule
+    private boolean applySchedule(User user, List<Schedule> schedules) {
+        if (schedules == null || schedules.isEmpty()) {
+            return false;
+        }
+
+        if (new HashSet<>(user.getSchedules())
+                .equals(new HashSet<>(schedules))) {
+            return false;
+        }
+
+        user.setSchedules(schedules);
+        return true;
+    }
 
 
 
