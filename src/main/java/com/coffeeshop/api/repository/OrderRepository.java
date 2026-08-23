@@ -143,13 +143,13 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     /**
      * Retrieves orders with the specified status, sorted by creation time
-     * in ascending order to process last order first (LIFO).
+     * in ascending order to process first in first out
      */
     @Query("""
         SELECT o FROM Order o
         WHERE o.status = :status
             AND o.status IN ('QUEUED', 'PREPARING', 'DONE')
-        ORDER BY o.createdAt DESC
+        ORDER BY o.createdAt ASC
     """)
     Page<Order> findByStatus (Pageable pageable, OrderStatus status);
 }
