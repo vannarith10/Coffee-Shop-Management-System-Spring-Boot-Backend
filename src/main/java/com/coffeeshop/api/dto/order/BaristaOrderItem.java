@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Builder
-public record OrderMessageToBarista(
+public record BaristaOrderItem(
 
         @JsonProperty("order_id")
         UUID orderId,

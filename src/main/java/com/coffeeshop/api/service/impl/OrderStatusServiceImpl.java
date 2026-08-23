@@ -40,21 +40,15 @@ public class OrderStatusServiceImpl implements OrderStatusService {
 
     private final OrderRepository orderRepository;
     private final AuthorizationGuard authorizationGuard;
-    private final OrderMapper orderMapper;
     private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
 
-    private final WebSocketEventPublisher webSocketEventPublisher;
-    private final PerformanceMetricsService performanceMetricsService;
-    private final AnalyticsService analyticsService;
-    private final SimpMessagingTemplate simpMessagingTemplate;
-
 
 
     //----------------------------
-    // SEND ORDER TO BARISTA
+    // Confirm Order
     //----------------------------
     @Override
-    public Order confirmAndSendToBarista(UUID orderId) {
+    public void confirmAndSendToBarista(UUID orderId) {
         authorizationGuard.requireCashier();
 
         Order order = orderRepository.findById(orderId)
@@ -73,13 +67,8 @@ public class OrderStatusServiceImpl implements OrderStatusService {
 
         order.setStatus(OrderStatus.QUEUED);
         order.setConfirmedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
-        Order saved = orderRepository.save(order);
 
-        var message = orderMapper.toOrderMessageResponseDto(saved);
-
-        webSocketEventPublisher.publishToBarista(Map.of("event", "new.order", "payload", message));
-
-        return saved;
+        orderRepository.save(order);
     }
 
 
@@ -194,10 +183,3 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 .build();
     }
 }
-
-
-
-
-
-
-

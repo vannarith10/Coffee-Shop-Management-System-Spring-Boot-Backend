@@ -59,18 +59,12 @@ public class CashierOrderController {
 
     // CONFIRM ORDER
     @PostMapping("/{id}/confirm")
-    public ResponseEntity<ConfirmResponse> confirmOrder (
+    public ResponseEntity<Void> confirmOrder (
             @PathVariable UUID id
             ) {
-        var order = orderStatusService.confirmAndSendToBarista(id);
-        return ResponseEntity.ok(new ConfirmResponse(
-                "success",
-                "Order sent to barista",
-                order.getId(),
-                order.getStatus().name()));
+        orderStatusService.confirmAndSendToBarista(id);
+        return ResponseEntity.ok().build();
     }
 
-
-    public record ConfirmResponse(String status, String message, UUID orderId, String orderStatus) {}
 
 }

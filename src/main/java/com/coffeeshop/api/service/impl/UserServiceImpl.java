@@ -47,6 +47,8 @@ public class UserServiceImpl implements UserService {
     private final AuthorizationGuard authorizationGuard;
     private final ImageStorageService imageStorageService;
 
+
+
     // ==================== GET CURRENT USER ID ==================== //
     @Override
     public UUID getCurrentUserId() {

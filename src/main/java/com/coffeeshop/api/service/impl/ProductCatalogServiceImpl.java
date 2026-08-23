@@ -71,8 +71,9 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
                 .toList();
 
         var pagination = Pagination.builder()
-                .page(pageable.getPageNumber() + 1)
-                .size(pageable.getPageSize())
+                .page(products.getNumber() + 1)
+                .size(products.getSize())
+                .itemCount(products.getNumberOfElements())
                 .totalPages(products.getTotalPages())
                 .totalItems(products.getTotalElements())
                 .build();
@@ -125,10 +126,3 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
 
 
 }
-
-
-
-
-
-
-

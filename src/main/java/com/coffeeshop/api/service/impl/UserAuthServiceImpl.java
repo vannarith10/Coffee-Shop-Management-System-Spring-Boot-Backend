@@ -1,6 +1,6 @@
 package com.coffeeshop.api.service.impl;
 
-import ch.qos.logback.core.util.StringUtil;
+
 import com.coffeeshop.api.config.JwtService;
 import com.coffeeshop.api.domain.RefreshToken;
 import com.coffeeshop.api.domain.User;

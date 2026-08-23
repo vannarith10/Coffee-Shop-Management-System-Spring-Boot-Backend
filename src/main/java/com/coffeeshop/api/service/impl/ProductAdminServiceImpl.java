@@ -89,8 +89,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                         .toList();
 
         var pagination = Pagination.builder()
-                .page(pageable.getPageNumber() + 1)
-                .size(pageable.getPageSize())
+                .page(products.getNumber() + 1)
+                .size(products.getSize())
+                .itemCount(products.getNumberOfElements())
                 .totalPages(products.getTotalPages())
                 .totalItems(products.getTotalElements())
                 .build();
@@ -135,8 +136,9 @@ public class ProductAdminServiceImpl implements ProductAdminService {
                         .toList();
 
         var pagination = Pagination.builder()
-                .page(pageable.getPageNumber() + 1)
-                .size(pageable.getPageSize())
+                .page(productPage.getNumber() + 1)
+                .size(productPage.getSize())
+                .itemCount(productPage.getNumberOfElements())
                 .totalPages(productPage.getTotalPages())
                 .totalItems(productPage.getTotalElements())
                 .build();

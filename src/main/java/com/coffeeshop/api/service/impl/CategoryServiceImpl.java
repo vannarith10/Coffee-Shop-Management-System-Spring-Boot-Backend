@@ -207,8 +207,9 @@ public class CategoryServiceImpl implements CategoryService {
                 .toList();
 
         var pagination = Pagination.builder()
-                .page(pageable.getPageNumber() + 1)
-                .size(pageable.getPageSize())
+                .page(categories.getNumber() + 1)
+                .size(categories.getSize())
+                .itemCount(categories.getNumberOfElements())
                 .totalPages(categories.getTotalPages())
                 .totalItems(categories.getTotalElements())
                 .build();

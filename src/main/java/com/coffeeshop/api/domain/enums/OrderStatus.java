@@ -2,10 +2,12 @@ package com.coffeeshop.api.domain.enums;
 
 public enum OrderStatus {
 
+
     CREATED,           // order created
-    QUEUED,
-    PREPARING,
-    DONE,
+    QUEUED,            // after order confirmed by cashier
+    PREPARING,         // barista start preparing
+    DONE,              // barista completed order
+    //
     PAYMENT_PENDING,   // waiting for QR pay
     CANCELLED
 

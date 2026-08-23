@@ -66,8 +66,9 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .toList();
 
         var pagination = Pagination.builder()
-                        .page(pageable.getPageNumber() + 1)
-                        .size(pageable.getPageSize())
+                        .page(userPage.getNumber() + 1)
+                        .size(userPage.getSize())
+                        .itemCount(userPage.getNumberOfElements())
                         .totalPages(userPage.getTotalPages())
                         .totalItems(userPage.getTotalElements())
                         .build();

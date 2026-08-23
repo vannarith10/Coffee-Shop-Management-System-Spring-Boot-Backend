@@ -104,8 +104,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                         .build()).toList();
 
         var pagination = Pagination.builder()
-                .page(pageable.getPageNumber() + 1)
-                .size(pageable.getPageSize())
+                .page(projections.getNumber() + 1)
+                .size(projections.getSize())
                 .totalPages(projections.getTotalPages())
                 .totalItems(projections.getTotalElements())
                 .build();
@@ -133,9 +133,3 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     }
 
 }
-
-
-
-
-
-

@@ -3,6 +3,8 @@ package com.coffeeshop.api.repository;
 import com.coffeeshop.api.domain.Order;
 import com.coffeeshop.api.domain.enums.OrderStatus;
 import com.coffeeshop.api.dto.adminDashboard.report.DailyRevenueProjection;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
+
 
     Optional<Order> findTopByCreatedAtBetweenOrderByCreatedAtDesc(
             Instant start,
@@ -89,97 +92,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
 
 
-    // ======================================================
-    // Total Revenue in a period (for Summary - Net Revenue)
-    // ====================================================== modified
-    @Query("""
-        SELECT COALESCE(SUM(o.totalAmount), 0)
-        FROM Order o
-        WHERE o.status = 'DONE'
-            AND o.doneAt >= :start
-            AND o.doneAt < :end
-    """)
-    BigDecimal getTotalRevenue (@Param("start") Instant start, @Param("end") Instant end);
-
-
-
-
-    // =========================
-    // Gross Profit in a period
-    // ========================= modified
-    @Query("""
-        SELECT COALESCE(SUM(o.totalAmount - (o.subtotalAmount * 0.40)), 0)
-        FROM Order o
-        WHERE o.status = 'DONE'
-            AND o.doneAt >= :start
-            AND o.doneAt < :end
-    """)
-    BigDecimal getGrossProfit(@Param("start") Instant start, @Param("end") Instant end);
-
-
-
-
-    // ===========================================
-    // Daily Revenue for Revenue Trends (per day)
-    // =========================================== modified
-    @Query("""
-        SELECT function('date', o.doneAt), COALESCE(SUM(o.totalAmount), 0)
-        FROM Order o
-        WHERE o.status = 'DONE'
-          AND o.doneAt >= :start
-          AND o.doneAt < :end
-        GROUP BY function('date', o.doneAt)
-        ORDER BY function('date', o.doneAt)
-    """)
-    List<Object[]> getDailyRevenue(
-            @Param("start") Instant start,
-            @Param("end") Instant end
-    );
-
-
-
-    // ===================
-    // Sales by Category
-    // =================== modified
-    @Query("""
-        SELECT p.category, COALESCE(SUM(oi.totalPrice), 0)
-        FROM Order o
-        JOIN o.items oi
-        JOIN oi.product p
-        WHERE o.status = 'DONE'
-            AND o.doneAt >= :start
-            AND o.doneAt < :end
-        GROUP BY p.category
-        ORDER BY COALESCE(SUM(oi.totalPrice), 0) DESC
-    """)
-    List<Object[]> getSalesByCategory(@Param("start") Instant start, @Param("end") Instant end);
-
-
-
-
-
-    // ================================
-    // Hourly Order Count per Weekday
-    // ================================
-    @Query(value = """
-        SELECT
-            EXTRACT(DOW FROM (o.done_at AT TIME ZONE 'Asia/Phnom_Penh')) AS dow,
-            EXTRACT(HOUR FROM (o.done_at AT TIME ZONE 'Asia/Phnom_Penh')) AS hour,
-            COUNT(o.id) AS total
-        FROM orders o
-        WHERE o.status = 'DONE'
-          AND o.done_at >= :start
-          AND o.done_at < :end
-        GROUP BY
-            EXTRACT(DOW FROM (o.done_at AT TIME ZONE 'Asia/Phnom_Penh')),
-            EXTRACT(HOUR FROM (o.done_at AT TIME ZONE 'Asia/Phnom_Penh'))
-        ORDER BY
-            dow, hour
-    """, nativeQuery = true)
-    List<Object[]> getHourlyDistribution(
-            @Param("start") Instant start,
-            @Param("end") Instant end
-    );
 
 
     // ==========================================
@@ -194,5 +106,51 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
         ORDER BY DAY(o.createdAt)
     """)
     List<DailyRevenueProjection> findDailyRevenue (Instant start, Instant end);
+
+
+
+
+
+    /**
+     * Retrieves orders for the KDS in the required processing order.
+     *
+     * Orders are filtered to include only active KDS statuses:
+     * QUEUED, PREPARING, and DONE.
+     *
+     * The custom status priority ensures orders are displayed in this order:
+     * 1. QUEUED     - waiting to be prepared
+     * 2. PREPARING  - currently being prepared
+     * 3. DONE       - preparation completed
+     *
+     * Within the same status, older orders are displayed first (FIFO)
+     * based on their creation time.
+     */
+    @Query("""
+        SELECT o FROM Order o
+        WHERE o.status IN ('QUEUED', 'PREPARING', 'DONE')
+        ORDER BY
+            CASE o.status
+                WHEN 'QUEUED' THEN 1
+                WHEN 'PREPARING' THEN 2
+                WHEN 'DONE' THEN 3
+            END,
+            o.createdAt ASC
+    """)
+    Page<Order> findAllByStatusPriority (Pageable pageable);
+
+
+
+
+    /**
+     * Retrieves orders with the specified status, sorted by creation time
+     * in ascending order to process last order first (LIFO).
+     */
+    @Query("""
+        SELECT o FROM Order o
+        WHERE o.status = :status
+            AND o.status IN ('QUEUED', 'PREPARING', 'DONE')
+        ORDER BY o.createdAt DESC
+    """)
+    Page<Order> findByStatus (Pageable pageable, OrderStatus status);
 }
 

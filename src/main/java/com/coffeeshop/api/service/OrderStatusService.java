@@ -10,7 +10,7 @@ public interface OrderStatusService {
 
     GetCreatedOrderResponse getCreatedOrder (UUID orderId);
 
-    Order confirmAndSendToBarista (UUID orderId);
+    void confirmAndSendToBarista (UUID orderId);
 
     UpdateOrderStatusResponse updateOrderStatus (UUID orderId, String status);
 

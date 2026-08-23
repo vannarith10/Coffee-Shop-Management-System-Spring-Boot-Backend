@@ -12,6 +12,9 @@ public record Pagination(
         @JsonProperty("size")
         Integer size,
 
+        @JsonProperty("item_count")
+        Integer itemCount,
+
         @JsonProperty("total_pages")
         Integer totalPages,
 

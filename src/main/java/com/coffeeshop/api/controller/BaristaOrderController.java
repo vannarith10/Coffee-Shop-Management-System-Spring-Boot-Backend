@@ -1,10 +1,8 @@
 package com.coffeeshop.api.controller;
 
 
-import com.coffeeshop.api.dto.order.OrderMessageToBarista;
-import com.coffeeshop.api.dto.order.PerformanceMetricsResponse;
-import com.coffeeshop.api.dto.order.UpdateOrderStatusRequest;
-import com.coffeeshop.api.dto.order.UpdateOrderStatusResponse;
+import com.coffeeshop.api.domain.enums.OrderStatus;
+import com.coffeeshop.api.dto.order.*;
 import com.coffeeshop.api.service.OrderQueryService;
 import com.coffeeshop.api.service.OrderStatusService;
 import com.coffeeshop.api.service.PerformanceMetricsService;
@@ -40,11 +38,19 @@ public class BaristaOrderController {
 
 
 
-    // BARISTA GETS ORDERS
-    @GetMapping("/get-orders")
-    public List<OrderMessageToBarista> list () {
-        return orderQueryService.baristaGetsOrders();
+    @GetMapping("/retrieve")
+    public ResponseEntity<BaristaOrderQueue> retrieveOrders (
+            @RequestParam (required = false, defaultValue = "1") int page,
+            @RequestParam (required = false, defaultValue = "10") int size,
+            @RequestParam (required = false) OrderStatus status
+            ) {
+        return ResponseEntity.ok(orderQueryService.getOrders(
+                page,
+                size,
+                status
+        ));
     }
+
 
 
 
