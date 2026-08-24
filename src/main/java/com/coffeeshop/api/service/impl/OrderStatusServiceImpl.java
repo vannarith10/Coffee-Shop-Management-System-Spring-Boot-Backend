@@ -80,12 +80,13 @@ public class OrderStatusServiceImpl implements OrderStatusService {
     //--------------------------
     @Transactional
     @Override
-    public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, String status) {
+    public void updateOrderStatus(UUID orderId, String status) {
         User barista = authorizationGuard.requireBarista();
 
         if (orderId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order ID required");
         }
+
         if (status == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status required");
         }
@@ -94,6 +95,10 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         OrderStatus oldStatus = order.getStatus();
+        if (oldStatus == OrderStatus.CANCELLED){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is already cancelled");
+        }
+
         final OrderStatus requested;
         try{
             requested = OrderStatus.valueOf(status.trim().toUpperCase());
@@ -102,43 +107,37 @@ public class OrderStatusServiceImpl implements OrderStatusService {
         }
 
         if (order.getStatus() != OrderStatus.QUEUED && order.getStatus() != OrderStatus.PREPARING) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Order must be QUEUED or PREPARING");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Current status must be QUEUED or PREPARING");
         }
 
         if (oldStatus == requested) {
-            return UpdateOrderStatusResponse.builder()
-                    .orderId(order.getId())
-                    .oldStatus(oldStatus)
-                    .newStatus(order.getStatus())
-                    .build();
+            return;
         }
 
-        Instant now = ZonedDateTime.now(BUSINESS_TZ).toInstant();
         switch (requested) {
             case PREPARING -> {
-                if (oldStatus != OrderStatus.QUEUED) throw new ResponseStatusException(HttpStatus.CONFLICT, "Only from QUEUED.");
+                if (oldStatus != OrderStatus.QUEUED) throw new ResponseStatusException(HttpStatus.CONFLICT, "Current status must be in QUEUED.");
                 order.setStatus(OrderStatus.PREPARING);
-
-                if (order.getPreparationStartedAt() == null) order.setPreparationStartedAt(now);
+                order.setPreparationStartedAt(Instant.now());
                 order.setProcessedBy(barista);
             }
             case DONE -> {
-                if (oldStatus != OrderStatus.PREPARING) throw new ResponseStatusException(HttpStatus.CONFLICT, "Only from PREPARING.");
+                if (oldStatus != OrderStatus.PREPARING) throw new ResponseStatusException(HttpStatus.CONFLICT, "Current status must be in PREPARING.");
                 order.setStatus(OrderStatus.DONE);
-                order.setDoneAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
+                order.setDoneAt(Instant.now());
             }
-            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PREPARING or DONE.");
+            case CANCELLED -> {
+                if (oldStatus == OrderStatus.DONE) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is already done, cannot cancel.");
+                }
+                order.setStatus(OrderStatus.CANCELLED);
+                order.setUpdatedAt(Instant.now());
+            }
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status can be only updated to PREPARING, DONE or CANCELLED.");
         }
 
         order.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
-        Order saved = orderRepository.save(order);
-
-
-        return UpdateOrderStatusResponse.builder()
-                .orderId(saved.getId())
-                .oldStatus(oldStatus)
-                .newStatus(saved.getStatus())
-                .build();
+        orderRepository.save(order);
     }
 
 
@@ -182,4 +181,6 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 .totalUnits(units)
                 .build();
     }
+
+
 }

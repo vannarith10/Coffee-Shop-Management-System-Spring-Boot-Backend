@@ -12,6 +12,6 @@ public interface OrderStatusService {
 
     void confirmAndSendToBarista (UUID orderId);
 
-    UpdateOrderStatusResponse updateOrderStatus (UUID orderId, String status);
+    void updateOrderStatus (UUID orderId, String status);
 
 }

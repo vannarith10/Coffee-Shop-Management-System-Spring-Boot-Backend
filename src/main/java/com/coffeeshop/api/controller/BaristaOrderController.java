@@ -29,11 +29,13 @@ public class BaristaOrderController {
 
     // UPDATE ORDER STATUS
     @PutMapping("/{id}/update-status")
-    public ResponseEntity<UpdateOrderStatusResponse> updateStatus (
+    public ResponseEntity<Void> updateStatus (
             @PathVariable UUID id,
             @RequestBody UpdateOrderStatusRequest request
             ) {
-        return ResponseEntity.ok(orderStatusService.updateOrderStatus(id, request.status()));
+        orderStatusService.updateOrderStatus(id, request.status());
+
+        return ResponseEntity.ok().build();
     }
 
 
