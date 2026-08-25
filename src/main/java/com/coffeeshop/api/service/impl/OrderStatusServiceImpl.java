@@ -69,7 +69,11 @@ public class OrderStatusServiceImpl implements OrderStatusService {
         order.setStatus(OrderStatus.QUEUED);
         order.setConfirmedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
 
-        orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+
+        // sending websocket event
+        var dto = orderMapper.toBaristaOrderItem(saved);
+        webSocketEventPublisher.sendConfirmOrderToBarista(dto);
     }
 
 

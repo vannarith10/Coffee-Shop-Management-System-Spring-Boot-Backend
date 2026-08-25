@@ -17,7 +17,7 @@ public class WebSocketEventPublisher {
 
     // ----------------------------------------------------------
     //
-    //                          ADMIN
+    //                     ADMIN sends Event
     //
     // -----------------------------------------------------------
 
@@ -59,15 +59,30 @@ public class WebSocketEventPublisher {
     }
 
 
+
+
     // ----------------------------------------------------------
     //
-    //                          BARISTA
+    //                     CASHIER sends Event
+    //
+    // -----------------------------------------------------------
+
+    public void sendConfirmOrderToBarista (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_BARISTA + "/order/queued", event);
+    }
+
+
+
+
+    // ----------------------------------------------------------
+    //
+    //                     BARISTA sends Event
     //
     // -----------------------------------------------------------
 
     // Sending an order that status state in PREPARING to Barista
     public void sendPreparingToBarista (Object event) {
-        simpMessagingTemplate.convertAndSend(TOPIC_BARISTA + "/preparing", event);
+        simpMessagingTemplate.convertAndSend(TOPIC_BARISTA + "/order/preparing", event);
     }
 
 }
