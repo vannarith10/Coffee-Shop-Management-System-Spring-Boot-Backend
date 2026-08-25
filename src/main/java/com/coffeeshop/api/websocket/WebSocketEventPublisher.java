@@ -14,10 +14,12 @@ public class WebSocketEventPublisher {
     private static final String TOPIC_BARISTA = "/topic/barista";
     private static final String TOPIC_PUBLIC = "/topic/public";
 
-    // Send to Barista
-    public void publishToBarista (Object event) {
-        simpMessagingTemplate.convertAndSend("/topic/barista", event);
-    }
+
+    // ----------------------------------------------------------
+    //
+    //                          ADMIN
+    //
+    // -----------------------------------------------------------
 
     // Send to All ADMINS
     // Non-Admin attempting to subscribe will be rejected by ChannelAuthInterceptor
@@ -54,6 +56,18 @@ public class WebSocketEventPublisher {
     // Staff Create
     public void publishCreateStaffToAdmins (Object event) {
         simpMessagingTemplate.convertAndSend(TOPIC_ADMIN + "/staff-create", event);
+    }
+
+
+    // ----------------------------------------------------------
+    //
+    //                          BARISTA
+    //
+    // -----------------------------------------------------------
+
+    // Sending an order that status state in PREPARING to Barista
+    public void sendPreparingToBarista (Object event) {
+        simpMessagingTemplate.convertAndSend(TOPIC_BARISTA + "/preparing", event);
     }
 
 }

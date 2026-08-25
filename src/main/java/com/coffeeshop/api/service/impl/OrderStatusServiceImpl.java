@@ -41,7 +41,8 @@ public class OrderStatusServiceImpl implements OrderStatusService {
     private final OrderRepository orderRepository;
     private final AuthorizationGuard authorizationGuard;
     private static final ZoneId BUSINESS_TZ = ZoneId.of("Asia/Phnom_Penh");
-
+    private final OrderMapper orderMapper;
+    private final WebSocketEventPublisher webSocketEventPublisher;
 
 
     //----------------------------
@@ -87,7 +88,7 @@ public class OrderStatusServiceImpl implements OrderStatusService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order ID required");
         }
 
-        if (status == null) {
+        if (status == null || status.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status required");
         }
 
@@ -95,49 +96,65 @@ public class OrderStatusServiceImpl implements OrderStatusService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         OrderStatus oldStatus = order.getStatus();
-        if (oldStatus == OrderStatus.CANCELLED){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is already cancelled");
-        }
 
-        final OrderStatus requested;
+        final OrderStatus newStatus;
+
         try{
-            requested = OrderStatus.valueOf(status.trim().toUpperCase());
+            newStatus = OrderStatus.valueOf(status.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status: " + status);
         }
 
-        if (order.getStatus() != OrderStatus.QUEUED && order.getStatus() != OrderStatus.PREPARING) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Current status must be QUEUED or PREPARING");
-        }
 
-        if (oldStatus == requested) {
+        if (oldStatus == newStatus) {
             return;
         }
 
-        switch (requested) {
+        if (oldStatus == OrderStatus.CANCELLED){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is already cancelled");
+        }
+
+        if (oldStatus == OrderStatus.DONE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is already done");
+        }
+
+        Instant now = Instant.now();
+
+        switch (newStatus) {
             case PREPARING -> {
                 if (oldStatus != OrderStatus.QUEUED) throw new ResponseStatusException(HttpStatus.CONFLICT, "Current status must be in QUEUED.");
                 order.setStatus(OrderStatus.PREPARING);
-                order.setPreparationStartedAt(Instant.now());
+                order.setPreparationStartedAt(now);
+                order.setUpdatedAt(now);
                 order.setProcessedBy(barista);
+
+                // Send event to Barista in realtime
+                var object = orderMapper.toBaristaOrderItem(order);
+                // makes sure the transaction of updating entity is commited before sending websocket event
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                webSocketEventPublisher.sendPreparingToBarista(object);
+                            }
+                        }
+                );
             }
+
             case DONE -> {
                 if (oldStatus != OrderStatus.PREPARING) throw new ResponseStatusException(HttpStatus.CONFLICT, "Current status must be in PREPARING.");
                 order.setStatus(OrderStatus.DONE);
-                order.setDoneAt(Instant.now());
+                order.setDoneAt(now);
+                order.setUpdatedAt(now);
             }
+
             case CANCELLED -> {
-                if (oldStatus == OrderStatus.DONE) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is already done, cannot cancel.");
-                }
                 order.setStatus(OrderStatus.CANCELLED);
-                order.setUpdatedAt(Instant.now());
+                order.setUpdatedAt(now);
             }
+
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status can be only updated to PREPARING, DONE or CANCELLED.");
         }
-
-        order.setUpdatedAt(ZonedDateTime.now(BUSINESS_TZ).toInstant());
-        orderRepository.save(order);
     }
 
 
