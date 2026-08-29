@@ -116,7 +116,7 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     // =============================
-    // Get Category Status
+    // Get Category Status Summary
     // =============================
     @Override
     public CategoryStatusResponse getCategoryStatus() {
@@ -138,7 +138,7 @@ public class CategoryServiceImpl implements CategoryService {
     //=========================
     @Transactional
     @Override
-    public CategoryResponse patchCategory(UUID categoryId, PatchCategoryRequest request) {
+    public void patchCategory(UUID categoryId, PatchCategoryRequest request) {
         // Name, Type, Status
         authorizationGuard.requireAdmin();
         Category category = categoryRepository.findById(categoryId).orElseThrow(
@@ -174,6 +174,8 @@ public class CategoryServiceImpl implements CategoryService {
                 .isActive(saved.isActive())
                 .build();
         webSocketEventPublisher.publishCategoryUpdateToAdmins(response);
+        webSocketEventPublisher.updateCategoryEvent(response);
+
 
         // Send new status
         var res = CategoryStatusResponse.builder()
@@ -182,9 +184,10 @@ public class CategoryServiceImpl implements CategoryService {
                 .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
                 .totalDisables(categoryRepository.countByActiveFalse())
                 .build();
+
+
         webSocketEventPublisher.publishCategoryStatusSummaryToAdmins(res);
 
-        return response;
     }
 
 

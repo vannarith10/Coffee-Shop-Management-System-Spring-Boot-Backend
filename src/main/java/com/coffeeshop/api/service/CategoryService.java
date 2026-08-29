@@ -12,7 +12,7 @@ public interface CategoryService {
 
     GetAllCategoriesResponse getAllCategories (int page, int size);
 
-    CategoryResponse patchCategory (UUID categoryId, PatchCategoryRequest request);
+    void patchCategory (UUID categoryId, PatchCategoryRequest request);
 
     CategoryStatusResponse getCategoryStatus ();
 

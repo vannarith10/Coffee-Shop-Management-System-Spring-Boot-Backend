@@ -47,7 +47,8 @@ public class CategoryController {
             @PathVariable UUID id,
             @RequestBody PatchCategoryRequest request
             ) {
-        return ResponseEntity.ok(categoryService.patchCategory(id, request));
+        categoryService.patchCategory(id, request);
+        return ResponseEntity.ok().build();
     }
 
 
