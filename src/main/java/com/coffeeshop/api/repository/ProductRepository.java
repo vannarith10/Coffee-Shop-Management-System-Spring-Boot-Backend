@@ -5,6 +5,7 @@ import com.coffeeshop.api.domain.enums.CategoryType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,5 +28,15 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             Pageable pageable);
 
     Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
+
+
+
+
+    @Query("""
+        SELECT p FROM Product p
+        ORDER BY
+            p.createdAt ASC
+    """)
+    Page<Product> findAllProductStock (Pageable pageable);
 
 }

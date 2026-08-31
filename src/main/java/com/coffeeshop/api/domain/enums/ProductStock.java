@@ -1,6 +1,5 @@
 package com.coffeeshop.api.domain.enums;
 
-import lombok.Builder;
 import lombok.Getter;
 
 @Getter

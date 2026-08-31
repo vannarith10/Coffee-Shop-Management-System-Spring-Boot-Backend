@@ -120,14 +120,15 @@ public class ProductAdminServiceImpl implements ProductAdminService {
 
 
     //------------------------------------------
-    // GET ALL PRODUCT STOCK STATUSES
+    // GET ALL STOCK STATUSES
     //------------------------------------------
     @Override
     public ProductStockStatusResponse GetAllProductStockStatus(int page, int size) {
         authorizationGuard.requireAdmin();
 
         Pageable pageable = PaginationHelper.of(page, size);
-        Page<Product> productPage = productRepository.findAll(pageable);
+//        Page<Product> productPage = productRepository.findAll(pageable);
+        Page<Product> productPage = productRepository.findAllProductStock(pageable);
 
         List<ProductStockStatusResponse.ProductItem> items =
                 productPage.getContent()
