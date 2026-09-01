@@ -17,11 +17,11 @@ public class TokenController {
     private final AuthTokenService authTokenService;
 
 
-    @PostMapping("/get-access-token")
-    public ResponseEntity<RefreshAccessTokenResponse> getAccessToken(@RequestBody @Validated RefreshAccessTokenRequest request){
-
-        System.out.println("########## Received refresh request: " + request);
-        System.out.println("########## Token value: " + request.refreshToken());
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshAccessTokenResponse> getAccessToken(
+            @RequestBody
+            @Validated
+            RefreshAccessTokenRequest request){
 
         RefreshAccessTokenResponse response = authTokenService.generateAccessTokenFromRefreshToken(request.refreshToken());
         return ResponseEntity.ok(response);

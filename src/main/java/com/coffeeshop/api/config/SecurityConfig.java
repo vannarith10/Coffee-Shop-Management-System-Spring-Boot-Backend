@@ -58,7 +58,7 @@ public class SecurityConfig {
 
                         // Auth
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v2/token/get-access-token").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v2/token/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/oauth2/callback").permitAll()
 
 
