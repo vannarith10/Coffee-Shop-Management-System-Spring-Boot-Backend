@@ -25,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.data.domain.Pageable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -145,22 +146,47 @@ public class CategoryServiceImpl implements CategoryService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")
         );
 
+
+        CategoryType newType = request.newType() != null
+                ? request.newType()
+                : category.getType();
+
+        String newName = request.newName() != null
+                ? request.newName()
+                : category.getName();
+
+        boolean newStatus = request.newStatus() != null
+                ? request.newStatus()
+                : category.isActive();
+
+        if (Objects.equals(category.getName(), newName)
+                && Objects.equals(category.getType(), newType)
+                && category.isActive() == newStatus) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No changes detected"
+            );
+        }
+
+
         // Name
         if (request.newName() != null && !request.newName().isBlank()) {
-            String name = request.newName().trim().toUpperCase();
-            if (!name.equals(category.getName()) && categoryRepository.existsByName(name)){
+            if (!newName.equals(category.getName()) && categoryRepository.existsByName(newName)){
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Category name already exist");
             } else {
-            category.setName(name);
+            category.setName(newName.trim().toUpperCase());
             }
         }
+
         // Type
         if (request.newType() != null) {
-            category.setType(request.newType());
+            category.setType(newType);
         }
+
         // Status
         if (request.newStatus() != null) {
-            category.setActive(request.newStatus());
+            category.setActive(newStatus);
         }
 
         Category saved = categoryRepository.save(category);
