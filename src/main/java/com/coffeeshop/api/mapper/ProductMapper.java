@@ -27,6 +27,7 @@ public class ProductMapper {
                 .imageUrl(imageStorageService.getImageUrl(product.getImageKey()))
                 .categoryType(product.getCategory().getType())
                 .categoryName(product.getCategory().getName())
+                .isCategoryActive(product.getCategory().isActive())
                 .stockStatus(product.getStockStatus())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())

@@ -47,6 +47,9 @@ public record GetAllProductsResponse(
             @JsonProperty("category_name")
             String categoryName,
 
+            @JsonProperty("is_category_active")
+            boolean isCategoryActive,
+
             @JsonProperty("stock_status")
             ProductStock stockStatus,
 

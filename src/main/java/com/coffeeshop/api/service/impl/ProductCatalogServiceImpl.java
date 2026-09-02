@@ -94,6 +94,7 @@ public class ProductCatalogServiceImpl implements ProductCatalogService {
                 .description(p.getDescription())
                 .categoryType(p.getCategory().getType())
                 .categoryName(p.getCategory().getName())
+                .isCategoryActive(p.getCategory().isActive())
                 .isAvailable(p.isAvailable())
                 .stockStatus(p.getStockStatus())
                 .build();

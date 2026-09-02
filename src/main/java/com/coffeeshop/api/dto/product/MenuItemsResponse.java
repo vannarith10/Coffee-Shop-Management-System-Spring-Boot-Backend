@@ -41,6 +41,9 @@ public record MenuItemsResponse(
         @JsonProperty("category_name")
         String categoryName, // Coffee, Tea, Bread, Snack
 
+        @JsonProperty("is_category_active")
+        boolean isCategoryActive,
+
         @JsonProperty("is_available")
         boolean isAvailable,
 
