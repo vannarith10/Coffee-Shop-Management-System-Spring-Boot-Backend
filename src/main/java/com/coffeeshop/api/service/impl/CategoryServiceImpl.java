@@ -45,7 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
     // ===============================
     @Override
     @Transactional
-    public CategoryResponse createCategory(CreateCategoryRequest request) {
+    public void createCategory(CreateCategoryRequest request) {
         authorizationGuard.requireAdmin();
 
         // Validation
@@ -109,8 +109,6 @@ public class CategoryServiceImpl implements CategoryService {
                 .totalDisables(categoryRepository.countByActiveFalse())
                 .build();
         webSocketEventPublisher.publishCategoryStatusSummaryToAdmins(status);
-
-        return response;
     }
 
 

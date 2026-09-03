@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public interface CategoryService {
 
-    CategoryResponse createCategory(CreateCategoryRequest request);
+    void createCategory(CreateCategoryRequest request);
 
     GetAllCategoriesResponse getAllCategories (int page, int size);
 

@@ -23,10 +23,12 @@ public class CategoryController {
     // CREATE CATEGORY
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CategoryResponse> create (
+    public ResponseEntity<Void> create (
             @Valid @RequestBody CreateCategoryRequest request
             ) {
-        return ResponseEntity.status(201).body(categoryService.createCategory(request));
+        categoryService.createCategory(request);
+
+        return ResponseEntity.ok().build();
     }
 
 
