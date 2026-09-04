@@ -43,6 +43,15 @@ public class EmployeeController {
 
 
 
+    @GetMapping("/profile/{id}")
+    public GetAllEmployeeProfilesResponse.Employee getAnEmployee (
+            @PathVariable UUID id
+    ) {
+        return employeeService.getAnEmployeeProfile(id);
+    }
+
+
+
     // CREATE EMPLOYEE PROFILE
     @PostMapping(value = "/create-account", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")

@@ -11,6 +11,8 @@ public interface EmployeeService {
 
     GetAllEmployeeProfilesResponse getAllEmployeeProfiles (int page, int size);
 
+    GetAllEmployeeProfilesResponse.Employee getAnEmployeeProfile (UUID id);
+
     GetAllEmployeeProfilesResponse.Employee addNewEmployee (AddNewEmployeeRequest request, MultipartFile image);
 
     void editEmployeeDetail (UUID id, EditStaffRequest request, MultipartFile image);

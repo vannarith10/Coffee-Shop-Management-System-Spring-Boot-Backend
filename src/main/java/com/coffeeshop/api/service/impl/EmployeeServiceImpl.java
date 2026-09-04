@@ -83,6 +83,32 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 
 
+    @Override
+    public GetAllEmployeeProfilesResponse.Employee getAnEmployeeProfile(UUID id) {
+        authorizationGuard.requireAdmin();
+
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+        );
+
+        return GetAllEmployeeProfilesResponse.Employee.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .shift(user.getShiftType())
+                .schedules(user.getSchedules())
+                .email(user.getEmail())
+                .phoneNumber("")
+                .status(user.getStatus())
+                .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
+                .build();
+    }
+
+
+
+
+
     // ================================
     // ADD NEW EMPLOYEE
     // ================================
