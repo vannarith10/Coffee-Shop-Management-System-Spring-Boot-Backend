@@ -208,10 +208,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .totalFoods(categoryRepository.countByType(CategoryType.FOOD))
                 .totalDisables(categoryRepository.countByActiveFalse())
                 .build();
-
-
         webSocketEventPublisher.publishCategoryStatusSummaryToAdmins(res);
-
     }
 
 

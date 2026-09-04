@@ -34,19 +34,15 @@ public class AuthTokenServiceImpl implements AuthTokenService {
     @Transactional
     @Override
     public RefreshAccessTokenResponse generateAccessTokenFromRefreshToken(String refreshToken) {
-
         // Validate Input
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Refresh token must not be blank");
         }
 
-
-        // Is this user's RFToken valid ?? Let's find
-        // Lookup refresh token in DB | Checking
         RefreshToken existingToken = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                        "Invalid refresh token"));
+                        "Refresh token reuse detected"));
 
         // Revoke check
         if (existingToken.isRevoked()) {
@@ -62,48 +58,47 @@ public class AuthTokenServiceImpl implements AuthTokenService {
 
         // Get user
         User user = existingToken.getUser();
-
-        if (!user.isActive()) {
+        if (!user.isActive() || user.getStatus() == Status.SUSPENDED) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Account disabled");
-        }
-
-        // Status check
-        if (user.getStatus() == Status.SUSPENDED) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User has been suspended");
+                    "Account disabled or suspended");
         }
 
 
-
-        // Generate new access token
+        // 1. Generate new access tokens
         String newAccessToken = jwtService.generateAccessToken(user);
-        String newRefreshToken = jwtService.generateRefreshToken(user);
+        String newRefreshTokenStr = jwtService.generateRefreshToken(user);
         long accessExpiry = jwtService.getExpiresInSeconds();
         Instant refreshExpiry = jwtService.getRefreshExpiryInstant();
 
 
-        existingToken.setToken(newRefreshToken);
-        existingToken.setExpiresAt(refreshExpiry);
-        existingToken.setRevoked(false);
-
-        // Save new
+        // 2. Revoke old tokens
+        existingToken.setRevoked(true);
         refreshTokenRepository.save(existingToken);
 
 
+        // 3. Create a refresh token entity
+        RefreshToken newRefreshToken = RefreshToken.builder()
+                .token(newRefreshTokenStr)
+                .expiresAt(refreshExpiry)
+                .revoked(false)
+                .user(user)
+                .build();
+        refreshTokenRepository.save(newRefreshToken);
 
-        RefreshAccessTokenResponse.Refresh refresh =
-                RefreshAccessTokenResponse.Refresh.builder()
-                        .token(newRefreshToken)
-                        .expiresAt(refreshExpiry)
-                        .build();
 
-        RefreshAccessTokenResponse.UserInfo userInfo =
-                RefreshAccessTokenResponse.UserInfo.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .role(user.getRole())
-                        .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
-                        .build();
+        // 4. Build response
+        RefreshAccessTokenResponse.Refresh refresh = RefreshAccessTokenResponse.Refresh.builder()
+                .token(newRefreshTokenStr)
+                .expiresAt(refreshExpiry)
+                .build();
+
+        RefreshAccessTokenResponse.UserInfo userInfo = RefreshAccessTokenResponse.UserInfo.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .imageUrl(imageStorageService.getImageUrl(user.getImageKey()))
+                .build();
+
 
         // Return response with refresh info
         return RefreshAccessTokenResponse.builder()

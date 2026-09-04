@@ -3,10 +3,8 @@ package com.coffeeshop.api.controller;
 
 import com.coffeeshop.api.dto.auth.LoginRequest;
 import com.coffeeshop.api.dto.auth.LoginResponse;
-import com.coffeeshop.api.dto.auth.RegisterResponse;
 import com.coffeeshop.api.service.OAuth2CodeService;
 import com.coffeeshop.api.service.UserAuthService;
-import com.coffeeshop.api.service.UserManagementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

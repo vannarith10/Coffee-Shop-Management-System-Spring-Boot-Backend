@@ -3,6 +3,8 @@ package com.coffeeshop.api.repository;
 import com.coffeeshop.api.domain.RefreshToken;
 import com.coffeeshop.api.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,5 +20,14 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     List<RefreshToken> findAllByUserAndRevokedFalse(User user);
 
     int deleteByRevokedTrueAndExpiresAtBefore(Instant cutoff);
+
+
+    @Modifying
+    @Query("""
+        DELETE FROM RefreshToken rt   
+        WHERE rt.revoked = true 
+        AND rt.expiresAt < CURRENT_TIMESTAMP
+    """)
+    int deleteExpiredRevokedTokens ();
 
 }
