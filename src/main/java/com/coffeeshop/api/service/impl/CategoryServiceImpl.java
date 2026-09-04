@@ -222,7 +222,7 @@ public class CategoryServiceImpl implements CategoryService {
         authorizationGuard.requireAdmin();
 
         Pageable pageable = PaginationHelper.of(page, size);
-        Page<Category> categories = categoryRepository.findAll(pageable);
+        Page<Category> categories = categoryRepository.findAllByOrderByNameAsc(pageable);
 
         List<GetAllCategoriesResponse.Category> categoryList = categories
                 .getContent()
@@ -244,6 +244,25 @@ public class CategoryServiceImpl implements CategoryService {
                 .build();
     }
 
+
+
+
+
+
+    @Override
+    public GetAllCategoriesResponse.Category getCategoryById(UUID id) {
+        authorizationGuard.requireAdmin();
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+
+        return GetAllCategoriesResponse.Category.builder()
+                .categoryId(category.getId())
+                .categoryName(category.getName())
+                .categoryType(category.getType())
+                .isActive(category.isActive())
+                .build();
+    }
 
 
 

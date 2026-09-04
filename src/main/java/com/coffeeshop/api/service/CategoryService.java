@@ -12,6 +12,8 @@ public interface CategoryService {
 
     GetAllCategoriesResponse getAllCategories (int page, int size);
 
+    GetAllCategoriesResponse.Category getCategoryById (UUID id);
+
     void patchCategory (UUID categoryId, PatchCategoryRequest request);
 
     CategoryStatusResponse getCategoryStatus ();

@@ -43,7 +43,12 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
                 c.name,
                 c.type
             )
-            FROM Category c
+        FROM Category c
+        ORDER BY c.name ASC
     """)
     List<CategoryNameAndTypeResponse> findAllNamesAndTypes ();
+
+
+    Page<Category> findAllByOrderByNameAsc(Pageable pageable);
+
 }

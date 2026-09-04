@@ -43,6 +43,16 @@ public class CategoryController {
     }
 
 
+
+    @GetMapping("/{id}")
+    public GetAllCategoriesResponse.Category getCategoryById (
+            @PathVariable UUID id
+    ) {
+        return categoryService.getCategoryById(id);
+    }
+
+
+
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> patchCategory (
