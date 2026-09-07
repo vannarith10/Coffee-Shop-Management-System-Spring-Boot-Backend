@@ -1,12 +1,15 @@
 package com.coffeeshop.api.websocket;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.scheduling.TaskScheduler;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -16,6 +19,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final WebSocketAuthHandshakeInterceptor webSocketAuthHandshakeInterceptor;
     private final ChannelAuthInterceptor channelAuthInterceptor;
     private final AuthHandshakeHandler authHandshakeHandler;
+
+
+    @Bean
+    public TaskScheduler taskScheduler () {
+        return new ConcurrentTaskScheduler();
+    }
 
 
     @Override
@@ -29,7 +38,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic", "/queue");
+        registry.enableSimpleBroker("/topic", "/queue")
+                .setTaskScheduler(taskScheduler())
+                .setHeartbeatValue(new long[]{10000, 10000});
+
         registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
     }
