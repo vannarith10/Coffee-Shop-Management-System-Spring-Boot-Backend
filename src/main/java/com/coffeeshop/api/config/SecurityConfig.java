@@ -25,6 +25,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Configuration
@@ -96,7 +97,7 @@ public class SecurityConfig {
             var error = ExceptionResponse.<String>builder()
                     .message("Authentication Error")
                     .status(HttpStatus.UNAUTHORIZED.value())
-                    .timestamp(LocalDateTime.now())
+                    .timestamp(Instant.now())
                     .detail(authException.getMessage())
                     .build();
             writeJson(response, HttpStatus.UNAUTHORIZED, error);
@@ -110,7 +111,7 @@ public class SecurityConfig {
             var error = ExceptionResponse.<String>builder()
                     .message("Authorization Error")
                     .status(HttpStatus.FORBIDDEN.value())
-                    .timestamp(LocalDateTime.now())
+                    .timestamp(Instant.now())
                     .detail(accessDeniedException.getMessage())
                     .build();
             writeJson(response, HttpStatus.FORBIDDEN, error);

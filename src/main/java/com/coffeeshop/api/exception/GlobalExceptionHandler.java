@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -20,7 +21,7 @@ public class GlobalExceptionHandler {
         ExceptionResponse<String> errorResponse = ExceptionResponse.<String>builder()
                 .message("Service Error")
                 .status(ex.getStatusCode().value())
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .detail(ex.getReason())
                 .build();
 
@@ -41,7 +42,7 @@ public class GlobalExceptionHandler {
         ExceptionResponse<String> errorResponse = ExceptionResponse.<String>builder()
                 .message("Validation Failed")
                 .status(HttpStatus.BAD_REQUEST.value())
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .detail(errors)
                 .build();
 
@@ -56,7 +57,7 @@ public class GlobalExceptionHandler {
         ExceptionResponse<String> errorResponse = ExceptionResponse.<String>builder()
                 .message("Unexpected Error")
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .detail(ex.getMessage())
                 .build();
 
