@@ -50,7 +50,7 @@ public class OrderQueryServiceImpl implements OrderQueryService {
     public BaristaOrderQueue getOrders(int page, int size, OrderStatus status) {
         authorizationGuard.requireBarista();
 
-        // pagination
+        //pagination
         Pageable pageable = PaginationHelper.of(page, size);
 
         Page<Order> orderPage;
